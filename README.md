@@ -1,115 +1,73 @@
-# Vim Quest - Neovim Practice Game
+# React + TypeScript + Vite
 
-A 2D top-down adventure game that teaches Neovim keybindings through progressive gameplay. Learn Vim naturally while having fun!
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Project Status
-🎯 **Planning Phase Complete** - Ready for implementation
+Currently, two official plugins are available:
 
-## 📚 Documentation
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-- **[📋 Game Design Plan](./GAME_DESIGN_PLAN.md)** - Complete game design document
-- **[🎵 Music Resources](./MUSIC_RESOURCES.md)** - Free music sources (CC0/CC-BY)
+## React Compiler
 
-## 🎮 Game Concept
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-Players navigate through levels using Vim keybindings (h, j, k, l, etc.) instead of arrow keys. Each level introduces new Vim commands while building upon previously learned skills.
+## Expanding the ESLint configuration
 
-**Platform**: Browser-based (optimized for desktop computers)
-**Target Audience**: Developers and Vim learners
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## Level 1: "The Basic Plains" (~10 minutes)
-- **Learn**: Basic motion keys (h, j, k, l)
-- **Challenges**: Tree maze, rock garden, lake bypass
-- **Goal**: Collect keys and reach the exit
-- **Estimated**: 65-90 moves, 10 minutes
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-## 🛠️ Technology Stack
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-### Confirmed Choices
-- **Engine**: Phaser 3 (HTML5 game framework)
-- **Language**: JavaScript/TypeScript
-- **Platform**: Web browser (desktop focus)
-- **Deployment**: GitHub Pages (free hosting)
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-### Assets (All Free/Open Source)
-- **Visual**: [Kenney.nl Top-down Shooter](https://www.kenney.nl/assets/top-down-shooter) (CC0)
-- **Music**: FreePD.com (CC0) or Kevin MacLeod (CC-BY)
-- **Sound Effects**: OpenGameArt.org (CC0)
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-## 🎨 Key Features
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-### Educational
-- Progressive Vim command introduction (8 levels planned)
-- Tutorial system with hints
-- Stats tracking (moves, time, efficiency)
-- Command history display
-
-### Accessibility (Desktop-focused)
-- Keyboard-only navigation
-- High contrast modes
-- Colorblind-friendly options
-- Adjustable font sizes
-- 60 FPS target performance
-
-### Browser Features
-- No installation required
-- Local progress saving (localStorage)
-- Fullscreen mode support
-- Works offline (optional PWA)
-- Shareable via URL
-
-## 🚀 Getting Started
-
-### For Players (Coming Soon)
-Visit the live demo at: `[URL coming soon]`
-
-### For Developers
-See [GAME_DESIGN_PLAN.md](./GAME_DESIGN_PLAN.md) for:
-- Complete Level 1 design
-- Technical implementation details
-- File structure
-- Code examples
-
-## 📋 Planned Features
-
-### Future Levels (2-8)
-- Level 2: Word movements (w, b, e)
-- Level 3: Line navigation (0, $, ^)
-- Level 4: Search commands (f, t)
-- Level 5: Jump commands (gg, G)
-- Level 6: Visual mode (v, V)
-- Level 7: Insert/Change (i, a, o, c, d)
-- Level 8: Advanced motions (%, *, n/N)
-
-### Quality of Life
-- Undo system (u key)
-- Level restart (R key)
-- Settings menu (audio, visuals)
-- Achievement system
-- Leaderboards (optional)
-
-## 🔗 Resource Links
-
-**Assets**:
-- [Kenney Assets](https://www.kenney.nl/assets/top-down-shooter) - Visual sprites
-- [FreePD](https://freepd.com/) - CC0 music
-- [Kevin MacLeod](https://incompetech.com/music/royalty-free/) - CC-BY music
-- [OpenGameArt](https://opengameart.org/) - Additional assets
-
-**Development**:
-- [Phaser 3 Docs](https://photonstorm.github.io/phaser3-docs/)
-- [Vim Commands Reference](https://vim.rtorr.com/)
-
-## 📄 License
-
-- **Code**: MIT (to be determined)
-- **Visual Assets**: CC0 (Kenney.nl - Public Domain)
-- **Music**: CC0 or CC-BY (see MUSIC_RESOURCES.md for attribution)
-
-## 🤝 Contributing
-
-This project is in the planning phase. Implementation coming soon!
-
----
-
-**Version**: 1.1 | **Last Updated**: 2025-11-04 | **Status**: Planning Complete
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
