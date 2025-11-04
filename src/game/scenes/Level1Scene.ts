@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import type { VictoryData } from './VictoryScene';
+import { SoundManager } from '../utils/SoundManager';
 
 interface Collectible {
   sprite: Phaser.GameObjects.Sprite;
@@ -14,6 +15,7 @@ export class Level1Scene extends Phaser.Scene {
   private tileSprites: Phaser.GameObjects.Sprite[][] = [];
   private collectibles: Collectible[] = [];
   private keysCollected: number = 0;
+  private soundManager!: SoundManager;
 
   // Progress tracking
   private moveCount: number = 0;
@@ -54,6 +56,9 @@ export class Level1Scene extends Phaser.Scene {
     this.keysCollected = 0;
     this.currentPhase = 0;
     this.collectibles = [];
+
+    // Initialize sound manager
+    this.soundManager = new SoundManager();
 
     // Create the level map
     this.createLevel();
@@ -281,6 +286,7 @@ export class Level1Scene extends Phaser.Scene {
     if (!this.isValidMove(toX, toY)) {
       this.mistakes++;
       this.player.showInvalidMove();
+      this.soundManager.playErrorSound();
       return;
     }
 
@@ -288,6 +294,7 @@ export class Level1Scene extends Phaser.Scene {
     this.player.executeMoveToTile(toX, toY);
     this.moveCount++;
     this.moveText.setText(`Moves: ${this.moveCount}`);
+    this.soundManager.playMoveSound();
 
     // Create movement particle trail
     this.createMovementTrail(data.fromX * 32 + 16, data.fromY * 32 + 16);
@@ -353,6 +360,7 @@ export class Level1Scene extends Phaser.Scene {
   private collectKey(collectible: Collectible) {
     this.keysCollected++;
     this.keysText.setText(`Keys: ${this.keysCollected}/2`);
+    this.soundManager.playCollectSound();
 
     // Particle effect
     this.createCollectEffect(collectible.sprite.x, collectible.sprite.y);
@@ -402,6 +410,9 @@ export class Level1Scene extends Phaser.Scene {
       keysUsed: this.keysUsed,
       mistakes: this.mistakes
     };
+
+    // Play victory sound
+    this.soundManager.playVictorySound();
 
     // Celebration effect
     this.createVictoryEffect(this.player.x, this.player.y);
