@@ -195,21 +195,36 @@ Master the fundamental Vim motion keys:
 
 ### Technology Stack Options
 
-#### Option 1: Web-based (Recommended for accessibility)
+#### ✅ Selected: Web-based (Browser Game)
 **Framework**: Phaser 3 (HTML5 game engine)
-- **Pros**: Cross-platform, easy deployment, good tilemap support
+- **Pros**:
+  - Instant accessibility (no downloads)
+  - Cross-platform (works on any modern browser)
+  - Easy to share (just send a link)
+  - Great tilemap and sprite support
+  - Active community and documentation
 - **Tech**: JavaScript/TypeScript, HTML5 Canvas
-- **Deploy**: GitHub Pages, Itch.io, or standalone
+- **Deploy**: GitHub Pages (free hosting), Itch.io, Netlify
+- **Browser Support**: Chrome, Firefox, Safari, Edge (desktop focus)
 
-#### Option 2: Desktop Application
-**Framework**: Godot Engine
-- **Pros**: Excellent 2D support, open-source, GDScript easy to learn
-- **Deploy**: Linux, Windows, Mac, Web (HTML5 export)
+**Why browser-based for this project**:
+1. **Vim users are developers** - already have browsers open
+2. **No installation friction** - practice during breaks
+3. **Easy updates** - push changes instantly
+4. **Shareable** - send link to friends/coworkers
+5. **Desktop-optimized** - keyboard is the primary input (computers, not mobile)
 
-#### Option 3: Terminal-based
-**Framework**: ncurses (C/C++) or blessed (Node.js)
-- **Pros**: True Vim feel, lightweight
-- **Cons**: More limited graphics
+#### Alternative Options (Not Selected)
+
+**Option 2: Desktop Application**
+- Framework: Godot Engine
+- Pros: Better performance, offline play
+- Cons: Requires download, harder to share
+
+**Option 3: Terminal-based**
+- Framework: ncurses (C/C++) or blessed (Node.js)
+- Pros: True Vim aesthetic, lightweight
+- Cons: Limited graphics, harder for beginners
 
 ### File Structure (Phaser Example)
 ```
@@ -342,6 +357,374 @@ class ProgressTracker {
 
 ---
 
+## 🖥️ Browser & Desktop Optimization
+
+### Target Platform: Desktop Browsers
+**Primary audience**: Developers and Vim users on computers
+
+**Supported browsers** (desktop versions):
+- Chrome/Chromium 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+**Not optimized for**:
+- Mobile browsers (touch controls incompatible with Vim key learning)
+- Tablets (no physical keyboard)
+- Old browsers (IE11, etc.)
+
+### Browser-Specific Features
+
+#### 1. Keyboard Focus Management
+```javascript
+// Ensure game always captures keyboard input
+window.addEventListener('load', () => {
+  const gameCanvas = document.getElementById('game-canvas');
+  gameCanvas.focus();
+
+  // Prevent tab from leaving game area
+  gameCanvas.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+    }
+  });
+
+  // Refocus on click
+  gameCanvas.addEventListener('blur', () => {
+    gameCanvas.focus();
+  });
+});
+```
+
+#### 2. Prevent Browser Shortcuts
+```javascript
+// Disable browser shortcuts that conflict with Vim keys
+document.addEventListener('keydown', (e) => {
+  // Prevent Ctrl+H (history) on some browsers
+  if (e.ctrlKey && e.key === 'h') {
+    e.preventDefault();
+  }
+
+  // Prevent spacebar from scrolling page
+  if (e.key === ' ' && e.target === document.body) {
+    e.preventDefault();
+  }
+});
+```
+
+#### 3. Fullscreen API
+```javascript
+// Optional fullscreen mode for distraction-free practice
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// Bind to F11 or custom button
+// Note: Must be triggered by user action (button click)
+```
+
+#### 4. Web Storage for Progress
+```javascript
+// Save progress locally in browser
+class SaveSystem {
+  static save(data) {
+    localStorage.setItem('vimquest_save', JSON.stringify(data));
+  }
+
+  static load() {
+    const data = localStorage.getItem('vimquest_save');
+    return data ? JSON.parse(data) : null;
+  }
+
+  // Track completed levels, best times, etc.
+}
+```
+
+### Desktop-Focused Accessibility
+
+#### Screen Size Optimization
+**Minimum resolution**: 1280x720
+**Recommended**: 1920x1080
+**Maximum**: Scales to 4K (3840x2160)
+
+```javascript
+// Responsive canvas sizing for desktop
+function resizeCanvas() {
+  const maxWidth = 1920;
+  const maxHeight = 1080;
+  const aspectRatio = 16 / 9;
+
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+
+  // Maintain aspect ratio
+  if (width / height > aspectRatio) {
+    width = height * aspectRatio;
+  } else {
+    height = width / aspectRatio;
+  }
+
+  // Cap at max size
+  width = Math.min(width, maxWidth);
+  height = Math.min(height, maxHeight);
+
+  game.scale.resize(width, height);
+}
+```
+
+#### Keyboard-Only Navigation
+**All UI must be keyboard accessible**:
+- Main menu: Arrow keys + Enter (or hjkl + o)
+- Settings: Tab between options (or jk to navigate)
+- Pause menu: Esc to open, hjkl to navigate
+- No mouse required (but supported for convenience)
+
+#### Visual Accessibility
+
+**Font sizes** (optimized for desktop viewing distance):
+- Headings: 24-32px
+- Body text: 16-18px
+- HUD elements: 14-16px
+- Minimum: 12px (for non-critical info)
+
+**High contrast mode**:
+```javascript
+const themes = {
+  normal: {
+    bg: '#7cb342',
+    fg: '#37474f',
+    player: '#ff6f00'
+  },
+  highContrast: {
+    bg: '#ffffff',
+    fg: '#000000',
+    player: '#ff0000'
+  },
+  darkMode: {
+    bg: '#1e1e1e',
+    fg: '#d4d4d4',
+    player: '#4ec9b0'
+  }
+};
+```
+
+**Colorblind modes**:
+- Deuteranopia (red-green)
+- Protanopia (red-green)
+- Tritanopia (blue-yellow)
+- Use patterns/shapes in addition to color
+
+#### Performance Optimization
+
+**Target framerate**: 60 FPS on desktop
+**Optimization techniques**:
+- Sprite atlases for fewer draw calls
+- Object pooling for particles
+- Tilemap culling (only render visible tiles)
+- Throttle non-critical updates
+
+```javascript
+// Performance monitoring
+const stats = {
+  fps: 60,
+  drawCalls: 0,
+  entities: 0
+};
+
+// Show FPS counter (dev mode only)
+if (DEBUG_MODE) {
+  this.add.text(10, 10, () => `FPS: ${Math.round(stats.fps)}`, {
+    font: '12px monospace',
+    fill: '#ffffff'
+  });
+}
+```
+
+### Browser Audio Handling
+
+#### Audio Context Management
+```javascript
+// Handle browser autoplay policies
+class AudioManager {
+  constructor(scene) {
+    this.scene = scene;
+    this.unlocked = false;
+  }
+
+  async unlock() {
+    // Modern browsers require user interaction before playing audio
+    if (!this.unlocked) {
+      await this.scene.sound.unlock();
+      this.unlocked = true;
+    }
+  }
+
+  // Call on first user input (key press or click)
+  init() {
+    const unlockAudio = () => {
+      this.unlock();
+      document.removeEventListener('keydown', unlockAudio);
+      document.removeEventListener('click', unlockAudio);
+    };
+
+    document.addEventListener('keydown', unlockAudio);
+    document.addEventListener('click', unlockAudio);
+  }
+}
+```
+
+### Desktop UX Enhancements
+
+#### 1. Custom Cursor
+```css
+/* Vim-style cursor when hovering game */
+#game-canvas {
+  cursor: crosshair; /* or custom cursor image */
+}
+
+#game-canvas.menu-mode {
+  cursor: pointer;
+}
+```
+
+#### 2. Loading Screen
+```html
+<!-- index.html -->
+<div id="loading-screen">
+  <div class="vim-logo">VIM QUEST</div>
+  <div class="loading-bar">
+    <div class="progress"></div>
+  </div>
+  <p>Loading assets... <span id="load-percent">0%</span></p>
+</div>
+
+<style>
+#loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Courier New', monospace;
+  color: #4ec9b0;
+}
+</style>
+```
+
+#### 3. Settings Panel
+**Desktop-specific settings**:
+- [ ] Audio volume (BGM, SFX separate)
+- [ ] Visual theme (Normal, High Contrast, Dark, Colorblind modes)
+- [ ] Screen size (Windowed, Fullscreen)
+- [ ] Show FPS counter
+- [ ] Tutorial hints (On/Off)
+- [ ] Key press display (On/Off)
+- [ ] Particle effects quality (Low/Medium/High)
+
+#### 4. Keyboard Shortcuts Reference
+**Accessible via `?` key**:
+```
+╔════════════════════════════════════╗
+║      VIM QUEST - CONTROLS         ║
+╠════════════════════════════════════╣
+║ Movement:                          ║
+║   h - Move Left                    ║
+║   j - Move Down                    ║
+║   k - Move Up                      ║
+║   l - Move Right                   ║
+║                                    ║
+║ Game Controls:                     ║
+║   Esc - Pause Menu                 ║
+║   R - Restart Level                ║
+║   ? - Show This Help               ║
+║   M - Toggle Music                 ║
+║                                    ║
+║ Advanced (Later Levels):           ║
+║   (coming soon...)                 ║
+╚════════════════════════════════════╝
+```
+
+### Browser Deployment Checklist
+
+- [ ] **Manifest.json** for PWA support (optional)
+- [ ] **Favicon** and app icons (multiple sizes)
+- [ ] **Open Graph tags** for social sharing
+- [ ] **Service Worker** for offline play (optional)
+- [ ] **HTTPS** required for some features (gamepad, fullscreen)
+- [ ] **Responsive meta tags** in HTML
+- [ ] **Analytics** (optional, privacy-respecting)
+
+### Example HTML Structure
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Vim Quest - Learn Neovim Through Gameplay</title>
+
+  <!-- Open Graph for sharing -->
+  <meta property="og:title" content="Vim Quest - Learn Neovim">
+  <meta property="og:description" content="Master Vim keybindings through a fun 2D adventure game">
+  <meta property="og:type" content="website">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1e1e1e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Courier New', monospace;
+      overflow: hidden; /* Prevent scrollbars during gameplay */
+    }
+
+    #game-container {
+      position: relative;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Prevent text selection during gameplay */
+    canvas {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="loading-screen">
+      <!-- Loading content here -->
+    </div>
+  </div>
+
+  <script src="phaser.min.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
+```
+
+---
+
 ## 📊 Level 1 Detailed Stats
 
 ### Estimated Completion Time: 10 minutes
@@ -381,6 +764,7 @@ class ProgressTracker {
 
 ### Phase 3: Polish (Week 5-6)
 - [ ] Add animations and particles
+- [ ] Integrate background music (see [MUSIC_RESOURCES.md](./MUSIC_RESOURCES.md))
 - [ ] Implement sound effects
 - [ ] Create victory/defeat screens
 - [ ] Add stats display
@@ -390,7 +774,8 @@ class ProgressTracker {
 - [ ] Playtesting with users
 - [ ] Balance difficulty
 - [ ] Fix bugs
-- [ ] Deploy to web
+- [ ] Deploy to web (GitHub Pages recommended)
+- [ ] Add browser-specific features (fullscreen, local storage)
 - [ ] Create documentation
 
 ---
@@ -426,22 +811,47 @@ class ProgressTracker {
 ## 📝 Next Steps
 
 1. **Review & Approve**: Confirm this plan meets your vision
-2. **Choose Tech Stack**: Decide on Phaser 3 (web) vs Godot
-3. **Download Assets**: Get Kenney's top-down shooter pack
-4. **Set Up Project**: Initialize git repo and project structure
-5. **Start Prototyping**: Build basic movement system first
+2. **Download Assets**:
+   - Visual: Kenney's top-down shooter pack (CC0)
+   - Audio: Background music from FreePD.com or Kevin MacLeod (see MUSIC_RESOURCES.md)
+3. **Set Up Browser Project**:
+   - Create HTML/CSS structure
+   - Install Phaser 3 via CDN or npm
+   - Set up basic file structure
+4. **Start Prototyping**:
+   - Build basic hjkl movement system
+   - Test in Chrome/Firefox
+   - Implement keyboard focus management
+5. **Deploy Early**: Set up GitHub Pages for continuous testing
 
 ---
 
 ## 🔗 Resource Links
 
-- **Kenney Assets**: https://www.kenney.nl/assets/top-down-shooter
-- **Phaser 3 Docs**: https://photonstorm.github.io/phaser3-docs/
+### Visual Assets
+- **Kenney Assets (Primary)**: https://www.kenney.nl/assets/top-down-shooter
 - **OpenGameArt**: https://opengameart.org/ (filter by CC0/GPL)
-- **Vim Commands**: https://vim.rtorr.com/ (reference for mechanics)
+
+### Audio Assets
+- **Music Resources**: See [MUSIC_RESOURCES.md](./MUSIC_RESOURCES.md) for full list
+- **FreePD (CC0 Music)**: https://freepd.com/
+- **Kevin MacLeod (CC-BY)**: https://incompetech.com/music/royalty-free/
+- **OpenGameArt Music**: https://opengameart.org/content/cc0-music-0
+
+### Development
+- **Phaser 3 Docs**: https://photonstorm.github.io/phaser3-docs/
+- **Phaser Examples**: https://phaser.io/examples
+- **Vim Commands Reference**: https://vim.rtorr.com/
+
+### Deployment
+- **GitHub Pages**: https://pages.github.com/
+- **Netlify**: https://www.netlify.com/
+- **itch.io**: https://itch.io/ (for game hosting)
 
 ---
 
-**Version**: 1.0
+**Version**: 1.1
 **Last Updated**: 2025-11-04
 **Status**: Planning Phase
+**Platform**: Browser-based (Desktop computers)
+**Music**: CC0/CC-BY (see MUSIC_RESOURCES.md)
