@@ -3,6 +3,8 @@ import { BootScene } from './scenes/BootScene';
 import { MainMenuScene } from './scenes/MainMenuScene';
 import { Level1Scene } from './scenes/Level1Scene';
 import { VictoryScene } from './scenes/VictoryScene';
+import { PauseScene } from './scenes/PauseScene';
+import { HelpScene } from './scenes/HelpScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -17,7 +19,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false
     }
   },
-  scene: [BootScene, MainMenuScene, Level1Scene, VictoryScene],
+  scene: [BootScene, MainMenuScene, Level1Scene, VictoryScene, PauseScene, HelpScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH

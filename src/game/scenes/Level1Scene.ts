@@ -256,8 +256,14 @@ export class Level1Scene extends Phaser.Scene {
 
     // Pause (Escape)
     this.input.keyboard?.on('keydown-ESC', () => {
-      // TODO: Implement pause menu
-      console.log('Pause not yet implemented');
+      this.scene.pause();
+      this.scene.launch('PauseScene');
+    });
+
+    // Help (?)
+    this.input.keyboard?.on('keydown-SLASH', () => {
+      this.scene.pause();
+      this.scene.launch('HelpScene');
     });
   }
 
