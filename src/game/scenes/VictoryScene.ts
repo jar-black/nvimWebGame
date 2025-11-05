@@ -3,7 +3,7 @@ import Phaser from 'phaser';
 export interface VictoryData {
   moves: number;
   time: number;
-  keysUsed: { h: number; j: number; k: number; l: number };
+  keysUsed: { [key: string]: number };
   mistakes: number;
 }
 
@@ -17,7 +17,7 @@ export class VictoryScene extends Phaser.Scene {
     const centerY = this.cameras.main.height / 2;
 
     // Victory title
-    const victoryText = this.add.text(centerX, centerY - 200, 'LEVEL COMPLETE!', {
+    const victoryText = this.add.text(centerX, centerY - 200, 'ALL LEVELS COMPLETE!', {
       fontFamily: 'Courier New, monospace',
       fontSize: '64px',
       color: '#ffd600',
@@ -63,13 +63,19 @@ export class VictoryScene extends Phaser.Scene {
     const timeSeconds = data.time % 60;
     const timeString = `${timeMinutes}:${timeSeconds.toString().padStart(2, '0')}`;
 
+    // Build keys used string dynamically
+    const keysUsedStr = Object.entries(data.keysUsed)
+      .filter(([_, count]) => count > 0)
+      .map(([key, count]) => `${key}: ${count}`)
+      .join('  ');
+
     const stats = [
       `Total Moves: ${data.moves}`,
       `Time: ${timeString}`,
       `Mistakes: ${data.mistakes}`,
       '',
       'Keys Used:',
-      `h: ${data.keysUsed.h}  j: ${data.keysUsed.j}  k: ${data.keysUsed.k}  l: ${data.keysUsed.l}`
+      keysUsedStr || 'None'
     ];
 
     stats.forEach((stat, index) => {
@@ -91,7 +97,7 @@ export class VictoryScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     // Continue text
-    const continueText = this.add.text(centerX, centerY + 280, 'Press R to restart | Press M for main menu', {
+    const continueText = this.add.text(centerX, centerY + 280, 'Congratulations! Press M for main menu | Press R to replay Level 1', {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
       color: '#ffd600'
