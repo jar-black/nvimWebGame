@@ -8,7 +8,7 @@ interface Collectible {
   id: number;
 }
 
-export class Level1Scene extends Phaser.Scene {
+export class Level4Scene extends Phaser.Scene {
   private player!: Player;
   private tilemap!: number[][];
   private tileSprites: Phaser.GameObjects.Sprite[][] = [];
@@ -19,7 +19,7 @@ export class Level1Scene extends Phaser.Scene {
   // Progress tracking
   private moveCount: number = 0;
   private startTime: number = 0;
-  private keysUsed = { h: 0, j: 0, k: 0, l: 0 };
+  private keysUsed = { h: 0, j: 0, k: 0, l: 0, w: 0, b: 0, '0': 0, '$': 0, u: 0, d: 0 };
   private mistakes: number = 0;
 
   // Tutorial
@@ -43,13 +43,13 @@ export class Level1Scene extends Phaser.Scene {
   private readonly TILE_GATE = 5;
 
   constructor() {
-    super({ key: 'Level1Scene' });
+    super({ key: 'Level4Scene' });
   }
 
   create() {
     this.startTime = Math.floor(this.time.now / 1000);
     this.moveCount = 0;
-    this.keysUsed = { h: 0, j: 0, k: 0, l: 0 };
+    this.keysUsed = { h: 0, j: 0, k: 0, l: 0, w: 0, b: 0, '0': 0, '$': 0, u: 0, d: 0 };
     this.mistakes = 0;
     this.keysCollected = 0;
     this.currentPhase = 0;
@@ -61,7 +61,7 @@ export class Level1Scene extends Phaser.Scene {
     // Create the level map
     this.createLevel();
 
-    // Create player at start position (tile 2, 2)
+    // Create player at start position
     this.player = new Player(this, 2 * 32 + 16, 2 * 32 + 16);
 
     // Set up event listeners
@@ -76,11 +76,11 @@ export class Level1Scene extends Phaser.Scene {
 
     // Show initial tutorial
     this.showTutorial(
-      'Welcome to Vim Quest!\n\nUse these keys to move:\nh ← | j ↓ | k ↑ | l →\n\nNavigate to the glowing marker!'
+      'Level 4: Half-Page Jumps!\n\nNew Keys:\nu ↑ Jump up 8 tiles (half-page up)\nd ↓ Jump down 8 tiles (half-page down)\n\nUse u/d for vertical navigation!'
     );
 
     // Create first waypoint
-    this.createWaypoint(7, 5);
+    this.createWaypoint(8, 10);
 
     // Set up camera
     this.cameras.main.setBounds(0, 0, this.tilemap[0].length * 32, this.tilemap.length * 32);
@@ -97,44 +97,58 @@ export class Level1Scene extends Phaser.Scene {
   }
 
   private createLevel() {
-    // Create a 40x22 tile map for Level 1 - HARDER VERSION with more obstacles
-    // Layout follows the design document with all phases
+    // Level 4: Tall vertical corridors requiring u/d jumps
     this.tilemap = [
-      // Row 0-2: Top border and start area
-      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      [3, 0, 0, 0, 3, 0, 3, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 3, 0, 0, 3],
-      [3, 0, 1, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 3, 0, 0, 3],
+      // Row 0-2: Start area
+      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
 
-      // Row 3-5: Tutorial area and path to tree maze
-      [3, 0, 1, 1, 1, 1, 1, 1, 0, 3, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 3],
-      [3, 0, 0, 0, 0, 0, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4, 3],
-      [3, 3, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 0, 0, 0, 0, 3, 3, 3],
+      // Row 3-10: First vertical corridor (requires d jump)
+      [3, 0, 0, 0, 0, 3, 0, 3, 1, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 4, 0, 4, 0, 0, 0, 1, 0, 0, 0, 4, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 0, 0, 3, 0, 3, 1, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 4, 0, 4, 0, 0, 0, 1, 0, 0, 0, 4, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 0, 0, 3, 0, 3, 1, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 4, 0, 4, 0, 0, 0, 1, 0, 0, 0, 4, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 0, 0, 3, 0, 3, 1, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 4, 0, 4, 0, 0, 0, 1, 0, 0, 0, 4, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 3],
 
-      // Row 6-10: Tree maze (focus on k and h) - MUCH DENSER
-      [3, 3, 3, 0, 0, 3, 0, 1, 1, 1, 0, 3, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 0, 3, 3],
-      [3, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 3],
-      [3, 0, 3, 3, 0, 0, 0, 3, 0, 1, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3],
-      [3, 0, 0, 3, 0, 3, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 3],
-      [3, 3, 0, 0, 0, 3, 0, 0, 0, 1, 1, 1, 1, 0, 3, 0, 3, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 3],
+      // Row 11-18: Junction and second corridor
+      [3, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 0, 0, 0, 0, 4, 0, 4, 0, 4, 0, 1, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 3, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3, 0, 3, 0, 1, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 0, 0, 0, 0, 4, 0, 4, 0, 4, 0, 1, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 3, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3, 0, 3, 0, 1, 0, 0, 0, 0, 0, 3],
 
-      // Row 11-14: Lake area (focus on l and navigating around) - MORE WATER AND OBSTACLES
-      [3, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 1, 0, 2, 2, 2, 2, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3],
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3],
-      [3, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 1, 0, 2, 2, 2, 2, 2, 2, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 0, 0, 0, 3, 0, 0, 3],
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 3],
+      // Row 19-26: Third vertical corridor (requires u jump)
+      [3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 0, 0, 0, 0, 4, 0, 4, 0, 4, 0, 1, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 0, 0, 0, 0, 4, 0, 4, 0, 4, 0, 1, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 0, 0, 0, 0, 4, 0, 4, 0, 4, 0, 1, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 3, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3, 0, 3, 0, 1, 0, 0, 0, 0, 0, 3],
 
-      // Row 15-17: Rock garden (focus on j - down movement) - MUCH MORE ROCKS
-      [3, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 1, 0, 4, 0, 4, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 3, 0, 3],
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3],
-      [3, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 1, 0, 4, 0, 4, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 5, 0, 0, 0, 3],
+      // Row 27-34: Final vertical challenge
+      [3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 1, 0, 4, 0, 4, 0, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3],
 
-      // Row 18-19: Final approach to goal - MORE OBSTACLES
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 4, 0, 0, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 3],
-      [3, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 3],
-
-      // Row 20-21: Bottom area with goal - MORE OBSTACLES
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 1, 0, 3, 0, 3],
-      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+      // Row 35-38: Final area with gate
+      [3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 5, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 3],
+      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
     ];
 
     // Render tilemap
@@ -161,14 +175,12 @@ export class Level1Scene extends Phaser.Scene {
       }
     }
 
-    // Place key 1 at end of tree maze (tile 13, 10)
-    this.createCollectible(13, 10, 'key', 1);
+    // Place keys
+    this.createCollectible(18, 22, 'key', 1);
+    this.createCollectible(8, 5, 'key', 2);
 
-    // Place key 2 in rock garden (tile 20, 15)
-    this.createCollectible(20, 15, 'key', 2);
-
-    // Place goal at end (tile 35, 20)
-    this.createCollectible(35, 20, 'goal', 0);
+    // Place goal
+    this.createCollectible(23, 36, 'goal', 0);
   }
 
   private getTileTexture(tileType: number): string {
@@ -239,18 +251,34 @@ export class Level1Scene extends Phaser.Scene {
   }
 
   private setupInput() {
-    // Prevent default browser behavior for vim keys
+    // Prevent default browser behavior
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
-      if (['h', 'j', 'k', 'l', 'r', 'R', ' ', 'Escape'].includes(event.key)) {
+      if (['h', 'j', 'k', 'l', 'w', 'b', 'u', 'd', '0', '$', 'r', 'R', ' ', 'Escape'].includes(event.key)) {
         event.preventDefault();
       }
     });
 
-    // Movement keys
+    // Basic movement keys
     this.input.keyboard?.on('keydown-H', () => this.player.moveLeft());
     this.input.keyboard?.on('keydown-J', () => this.player.moveDown());
     this.input.keyboard?.on('keydown-K', () => this.player.moveUp());
     this.input.keyboard?.on('keydown-L', () => this.player.moveRight());
+
+    // Word jump keys
+    this.input.keyboard?.on('keydown-W', () => this.handleWordJump('forward'));
+    this.input.keyboard?.on('keydown-B', () => this.handleWordJump('backward'));
+
+    // Page jump keys
+    this.input.keyboard?.on('keydown-U', () => this.handlePageJump('up'));
+    this.input.keyboard?.on('keydown-D', () => this.handlePageJump('down'));
+
+    // Line movement keys
+    this.input.keyboard?.on('keydown-ZERO', () => this.handleLineJump('start'));
+    this.input.keyboard?.on('keydown-FOUR', () => {
+      if (this.input.keyboard?.addKey('SHIFT').isDown) {
+        this.handleLineJump('end');
+      }
+    });
 
     // Restart
     this.input.keyboard?.on('keydown-R', () => {
@@ -268,6 +296,110 @@ export class Level1Scene extends Phaser.Scene {
       this.scene.pause();
       this.scene.launch('HelpScene');
     });
+  }
+
+  private handleWordJump(direction: 'forward' | 'backward') {
+    const currentTileX = Math.floor(this.player.x / 32);
+    const currentTileY = Math.floor(this.player.y / 32);
+
+    const jumpDistance = 5;
+    const dx = direction === 'forward' ? jumpDistance : -jumpDistance;
+    const targetX = currentTileX + dx;
+    const targetY = currentTileY;
+
+    const key = direction === 'forward' ? 'w' : 'b';
+    this.keysUsed[key]++;
+    this.lastKeyText.setText(`Last key: ${key}`);
+
+    // Check if jump is valid
+    if (!this.isValidMove(targetX, targetY)) {
+      this.mistakes++;
+      this.player.showInvalidMove();
+      this.soundManager.playErrorSound();
+      return;
+    }
+
+    // Execute jump
+    this.player.executeMoveToTile(targetX, targetY);
+    this.moveCount++;
+    this.moveText.setText(`Moves: ${this.moveCount}`);
+    this.soundManager.playMoveSound();
+
+    // Create jump trail
+    this.createJumpTrail(currentTileX * 32 + 16, currentTileY * 32 + 16, targetX * 32 + 16, targetY * 32 + 16);
+  }
+
+  private handlePageJump(direction: 'up' | 'down') {
+    const currentTileX = Math.floor(this.player.x / 32);
+    const currentTileY = Math.floor(this.player.y / 32);
+
+    const jumpDistance = 8;
+    const dy = direction === 'up' ? -jumpDistance : jumpDistance;
+    const targetX = currentTileX;
+    const targetY = currentTileY + dy;
+
+    const key = direction === 'up' ? 'u' : 'd';
+    this.keysUsed[key]++;
+    this.lastKeyText.setText(`Last key: ${key}`);
+
+    // Check if jump is valid
+    if (!this.isValidMove(targetX, targetY)) {
+      this.mistakes++;
+      this.player.showInvalidMove();
+      this.soundManager.playErrorSound();
+      return;
+    }
+
+    // Execute jump
+    this.player.executeMoveToTile(targetX, targetY);
+    this.moveCount++;
+    this.moveText.setText(`Moves: ${this.moveCount}`);
+    this.soundManager.playMoveSound();
+
+    // Create jump trail
+    this.createJumpTrail(currentTileX * 32 + 16, currentTileY * 32 + 16, targetX * 32 + 16, targetY * 32 + 16);
+  }
+
+  private handleLineJump(position: 'start' | 'end') {
+    const currentTileX = Math.floor(this.player.x / 32);
+    const currentTileY = Math.floor(this.player.y / 32);
+
+    let targetX = currentTileX;
+
+    if (position === 'start') {
+      // Jump to first non-blocking tile in row
+      targetX = 0;
+      while (targetX < this.tilemap[0].length && !this.isValidMove(targetX, currentTileY)) {
+        targetX++;
+      }
+    } else {
+      // Jump to last non-blocking tile in row
+      targetX = this.tilemap[0].length - 1;
+      while (targetX >= 0 && !this.isValidMove(targetX, currentTileY)) {
+        targetX--;
+      }
+    }
+
+    const key = position === 'start' ? '0' : '$';
+    this.keysUsed[key]++;
+    this.lastKeyText.setText(`Last key: ${key}`);
+
+    // Check if we found a valid position
+    if (!this.isValidMove(targetX, currentTileY)) {
+      this.mistakes++;
+      this.player.showInvalidMove();
+      this.soundManager.playErrorSound();
+      return;
+    }
+
+    // Execute jump
+    this.player.executeMoveToTile(targetX, currentTileY);
+    this.moveCount++;
+    this.moveText.setText(`Moves: ${this.moveCount}`);
+    this.soundManager.playMoveSound();
+
+    // Create jump trail
+    this.createJumpTrail(currentTileX * 32 + 16, currentTileY * 32 + 16, targetX * 32 + 16, currentTileY * 32 + 16);
   }
 
   private handleMoveAttempt(data: { fromX: number; fromY: number; toX: number; toY: number; key: string }) {
@@ -323,7 +455,7 @@ export class Level1Scene extends Phaser.Scene {
     const tileType = this.tilemap[tileY][tileX];
 
     // Check blocking tiles
-    if (tileType === this.TILE_TREE || tileType === this.TILE_ROCK) {
+    if (tileType === this.TILE_TREE || tileType === this.TILE_ROCK || tileType === this.TILE_WATER) {
       return false;
     }
 
@@ -365,9 +497,9 @@ export class Level1Scene extends Phaser.Scene {
 
     // Update tutorial
     if (this.keysCollected === 1) {
-      this.showTutorial('Great! You found Key 1!\n\nNow navigate through the rock garden\nusing j (down) to find Key 2.');
+      this.showTutorial('Great! First key found!\n\nUse d to jump down the long corridor!');
     } else if (this.keysCollected === 2) {
-      this.showTutorial('Excellent! You have both keys!\n\nNow you can pass through the gate.\nHead to the golden star to complete the level!');
+      this.showTutorial('Excellent! Both keys collected!\n\nUse u to jump back up and reach the gate!');
       // Open gate
       this.openGate();
     }
@@ -395,7 +527,6 @@ export class Level1Scene extends Phaser.Scene {
   }
 
   private reachGoal() {
-    // Victory!
     // Play victory sound
     this.soundManager.playVictorySound();
 
@@ -404,7 +535,7 @@ export class Level1Scene extends Phaser.Scene {
 
     // Transition to next level after short delay
     this.time.delayedCall(1500, () => {
-      this.scene.start('Level2Scene');
+      this.scene.start('Level5Scene');
     });
   }
 
@@ -413,8 +544,8 @@ export class Level1Scene extends Phaser.Scene {
 
     switch (this.currentPhase) {
       case 1:
-        this.showTutorial('Good job! Now navigate through the tree maze.\n\nUse k (up) and h (left) to find your way!');
-        this.createWaypoint(13, 10);
+        this.showTutorial('Nice! Now use d to jump down 8 tiles!\n\nThis helps navigate tall areas quickly.');
+        this.createWaypoint(8, 20);
         break;
     }
   }
@@ -423,7 +554,7 @@ export class Level1Scene extends Phaser.Scene {
     const hudY = 10;
 
     // Level indicator
-    this.add.text(10, hudY, 'LEVEL 1', {
+    this.add.text(10, hudY, 'LEVEL 4', {
       fontFamily: 'Courier New, monospace',
       fontSize: '20px',
       color: '#ffd600',
@@ -522,6 +653,31 @@ export class Level1Scene extends Phaser.Scene {
         trail.destroy();
       }
     });
+  }
+
+  private createJumpTrail(x1: number, y1: number, x2: number, y2: number) {
+    // Create multiple particles along the jump path
+    const steps = 8;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = x1 + (x2 - x1) * t;
+      const y = y1 + (y2 - y1) * t;
+
+      this.time.delayedCall(i * 30, () => {
+        const particle = this.add.circle(x, y, 6, 0x4ec9b0, 0.7);
+        particle.setDepth(9);
+
+        this.tweens.add({
+          targets: particle,
+          alpha: 0,
+          scale: 2,
+          duration: 400,
+          onComplete: () => {
+            particle.destroy();
+          }
+        });
+      });
+    }
   }
 
   private createCollectEffect(x: number, y: number) {
