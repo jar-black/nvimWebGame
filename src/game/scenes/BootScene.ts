@@ -17,10 +17,28 @@ export class BootScene extends Phaser.Scene {
   }
 
   private createPlaceholderAssets() {
-    // Create player sprite (orange square)
+    // Create player sprite (character with face)
     const playerGraphics = this.add.graphics();
+    // Body (orange)
     playerGraphics.fillStyle(0xff6f00, 1);
-    playerGraphics.fillRect(0, 0, 32, 32);
+    playerGraphics.fillRoundedRect(8, 10, 16, 18, 4);
+    // Head (lighter orange)
+    playerGraphics.fillStyle(0xffab40, 1);
+    playerGraphics.fillCircle(16, 10, 8);
+    // Eyes
+    playerGraphics.fillStyle(0x000000, 1);
+    playerGraphics.fillCircle(13, 9, 2);
+    playerGraphics.fillCircle(19, 9, 2);
+    // Smile
+    playerGraphics.lineStyle(2, 0x000000, 1);
+    playerGraphics.arc(16, 10, 4, 0.2, Math.PI - 0.2);
+    // Arms
+    playerGraphics.fillStyle(0xff6f00, 1);
+    playerGraphics.fillRect(4, 12, 4, 8);
+    playerGraphics.fillRect(24, 12, 4, 8);
+    // Legs
+    playerGraphics.fillRect(10, 26, 5, 6);
+    playerGraphics.fillRect(17, 26, 5, 6);
     playerGraphics.generateTexture('player', 32, 32);
     playerGraphics.destroy();
 
@@ -118,6 +136,140 @@ export class BootScene extends Phaser.Scene {
     waypointGraphics.fillCircle(16, 16, 6);
     waypointGraphics.generateTexture('waypoint', 32, 32);
     waypointGraphics.destroy();
+
+    // Create bridge tile (wooden planks over water)
+    const bridgeGraphics = this.add.graphics();
+    bridgeGraphics.fillStyle(0x42a5f5, 1);
+    bridgeGraphics.fillRect(0, 0, 32, 32);
+    bridgeGraphics.fillStyle(0x8d6e63, 1);
+    bridgeGraphics.fillRect(2, 0, 6, 32);
+    bridgeGraphics.fillRect(12, 0, 6, 32);
+    bridgeGraphics.fillRect(22, 0, 6, 32);
+    bridgeGraphics.fillStyle(0x6d4c41, 1);
+    bridgeGraphics.fillRect(0, 12, 32, 3);
+    bridgeGraphics.fillRect(0, 20, 32, 3);
+    bridgeGraphics.generateTexture('bridge', 32, 32);
+    bridgeGraphics.destroy();
+
+    // Create one-way brick (right arrow)
+    const oneWayRightGraphics = this.add.graphics();
+    oneWayRightGraphics.fillStyle(0xb71c1c, 1);
+    oneWayRightGraphics.fillRect(0, 0, 32, 32);
+    oneWayRightGraphics.fillStyle(0xc62828, 1);
+    oneWayRightGraphics.fillRect(2, 2, 28, 28);
+    // Arrow pointing right
+    oneWayRightGraphics.fillStyle(0xffeb3b, 1);
+    oneWayRightGraphics.beginPath();
+    oneWayRightGraphics.moveTo(8, 16);
+    oneWayRightGraphics.lineTo(20, 16);
+    oneWayRightGraphics.lineTo(20, 10);
+    oneWayRightGraphics.lineTo(28, 16);
+    oneWayRightGraphics.lineTo(20, 22);
+    oneWayRightGraphics.lineTo(20, 16);
+    oneWayRightGraphics.closePath();
+    oneWayRightGraphics.fillPath();
+    oneWayRightGraphics.generateTexture('oneway_right', 32, 32);
+    oneWayRightGraphics.destroy();
+
+    // Create one-way brick (left arrow)
+    const oneWayLeftGraphics = this.add.graphics();
+    oneWayLeftGraphics.fillStyle(0xb71c1c, 1);
+    oneWayLeftGraphics.fillRect(0, 0, 32, 32);
+    oneWayLeftGraphics.fillStyle(0xc62828, 1);
+    oneWayLeftGraphics.fillRect(2, 2, 28, 28);
+    // Arrow pointing left
+    oneWayLeftGraphics.fillStyle(0xffeb3b, 1);
+    oneWayLeftGraphics.beginPath();
+    oneWayLeftGraphics.moveTo(24, 16);
+    oneWayLeftGraphics.lineTo(12, 16);
+    oneWayLeftGraphics.lineTo(12, 10);
+    oneWayLeftGraphics.lineTo(4, 16);
+    oneWayLeftGraphics.lineTo(12, 22);
+    oneWayLeftGraphics.lineTo(12, 16);
+    oneWayLeftGraphics.closePath();
+    oneWayLeftGraphics.fillPath();
+    oneWayLeftGraphics.generateTexture('oneway_left', 32, 32);
+    oneWayLeftGraphics.destroy();
+
+    // Create one-way brick (up arrow)
+    const oneWayUpGraphics = this.add.graphics();
+    oneWayUpGraphics.fillStyle(0xb71c1c, 1);
+    oneWayUpGraphics.fillRect(0, 0, 32, 32);
+    oneWayUpGraphics.fillStyle(0xc62828, 1);
+    oneWayUpGraphics.fillRect(2, 2, 28, 28);
+    // Arrow pointing up
+    oneWayUpGraphics.fillStyle(0xffeb3b, 1);
+    oneWayUpGraphics.beginPath();
+    oneWayUpGraphics.moveTo(16, 24);
+    oneWayUpGraphics.lineTo(16, 12);
+    oneWayUpGraphics.lineTo(10, 12);
+    oneWayUpGraphics.lineTo(16, 4);
+    oneWayUpGraphics.lineTo(22, 12);
+    oneWayUpGraphics.lineTo(16, 12);
+    oneWayUpGraphics.closePath();
+    oneWayUpGraphics.fillPath();
+    oneWayUpGraphics.generateTexture('oneway_up', 32, 32);
+    oneWayUpGraphics.destroy();
+
+    // Create one-way brick (down arrow)
+    const oneWayDownGraphics = this.add.graphics();
+    oneWayDownGraphics.fillStyle(0xb71c1c, 1);
+    oneWayDownGraphics.fillRect(0, 0, 32, 32);
+    oneWayDownGraphics.fillStyle(0xc62828, 1);
+    oneWayDownGraphics.fillRect(2, 2, 28, 28);
+    // Arrow pointing down
+    oneWayDownGraphics.fillStyle(0xffeb3b, 1);
+    oneWayDownGraphics.beginPath();
+    oneWayDownGraphics.moveTo(16, 8);
+    oneWayDownGraphics.lineTo(16, 20);
+    oneWayDownGraphics.lineTo(10, 20);
+    oneWayDownGraphics.lineTo(16, 28);
+    oneWayDownGraphics.lineTo(22, 20);
+    oneWayDownGraphics.lineTo(16, 20);
+    oneWayDownGraphics.closePath();
+    oneWayDownGraphics.fillPath();
+    oneWayDownGraphics.generateTexture('oneway_down', 32, 32);
+    oneWayDownGraphics.destroy();
+
+    // Create locked door sprites for progressive unlocking
+    // Red door (requires key 1)
+    const redDoorGraphics = this.add.graphics();
+    redDoorGraphics.fillStyle(0xc62828, 1);
+    redDoorGraphics.fillRect(0, 0, 32, 32);
+    redDoorGraphics.fillStyle(0xb71c1c, 1);
+    redDoorGraphics.fillRect(4, 4, 24, 24);
+    redDoorGraphics.fillStyle(0xffd600, 1);
+    redDoorGraphics.fillCircle(22, 16, 3);
+    redDoorGraphics.lineStyle(2, 0xff0000, 1);
+    redDoorGraphics.strokeRect(6, 6, 20, 20);
+    redDoorGraphics.generateTexture('door_red', 32, 32);
+    redDoorGraphics.destroy();
+
+    // Blue door (requires key 2)
+    const blueDoorGraphics = this.add.graphics();
+    blueDoorGraphics.fillStyle(0x1565c0, 1);
+    blueDoorGraphics.fillRect(0, 0, 32, 32);
+    blueDoorGraphics.fillStyle(0x0d47a1, 1);
+    blueDoorGraphics.fillRect(4, 4, 24, 24);
+    blueDoorGraphics.fillStyle(0xffd600, 1);
+    blueDoorGraphics.fillCircle(22, 16, 3);
+    blueDoorGraphics.lineStyle(2, 0x1976d2, 1);
+    blueDoorGraphics.strokeRect(6, 6, 20, 20);
+    blueDoorGraphics.generateTexture('door_blue', 32, 32);
+    blueDoorGraphics.destroy();
+
+    // Green door (requires key 3)
+    const greenDoorGraphics = this.add.graphics();
+    greenDoorGraphics.fillStyle(0x2e7d32, 1);
+    greenDoorGraphics.fillRect(0, 0, 32, 32);
+    greenDoorGraphics.fillStyle(0x1b5e20, 1);
+    greenDoorGraphics.fillRect(4, 4, 24, 24);
+    greenDoorGraphics.fillStyle(0xffd600, 1);
+    greenDoorGraphics.fillCircle(22, 16, 3);
+    greenDoorGraphics.lineStyle(2, 0x43a047, 1);
+    greenDoorGraphics.strokeRect(6, 6, 20, 20);
+    greenDoorGraphics.generateTexture('door_green', 32, 32);
+    greenDoorGraphics.destroy();
   }
 
   private drawStar(

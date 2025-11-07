@@ -76,7 +76,7 @@ export class Level2Scene extends Phaser.Scene {
 
     // Show initial tutorial
     this.showTutorial(
-      'Level 2: Word Jumps!\n\nNew Keys:\nw → Jump forward 5 tiles\nb ← Jump backward 5 tiles\n\nUse w/b for long distances, hjkl for precision!'
+      'Level 2: Jump Training!\n\nPractice count prefix:\n2j = move 2 tiles down\n3l = move 3 tiles right\n\nUse this to jump over rocks and water!\nCollect all keys to reach the goal!'
     );
 
     // Create first waypoint
@@ -238,10 +238,15 @@ export class Level2Scene extends Phaser.Scene {
   private setupInput() {
     // Prevent default browser behavior
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
-      if (['h', 'j', 'k', 'l', 'w', 'b', 'r', 'R', ' ', 'Escape'].includes(event.key)) {
+      if (['h', 'j', 'k', 'l', 'r', 'R', ' ', 'Escape', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(event.key)) {
         event.preventDefault();
       }
     });
+
+    // Number keys for count prefix
+    for (let i = 1; i <= 9; i++) {
+      this.input.keyboard?.on(`keydown-${i}`, () => this.player.addToCountPrefix(i));
+    }
 
     // Basic movement keys
     this.input.keyboard?.on('keydown-H', () => this.player.moveLeft());
@@ -249,9 +254,14 @@ export class Level2Scene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-K', () => this.player.moveUp());
     this.input.keyboard?.on('keydown-L', () => this.player.moveRight());
 
-    // Word jump keys
-    this.input.keyboard?.on('keydown-W', () => this.handleWordJump('forward'));
-    this.input.keyboard?.on('keydown-B', () => this.handleWordJump('backward'));
+    // Listen for count prefix changes to update HUD
+    this.events.on('player:countPrefixChanged', (count: number) => {
+      if (count > 0) {
+        this.lastKeyText.setText(`Count: ${count}_`);
+      } else {
+        this.lastKeyText.setText('Last key: -');
+      }
+    });
 
     // Restart
     this.input.keyboard?.on('keydown-R', () => {
@@ -271,46 +281,31 @@ export class Level2Scene extends Phaser.Scene {
     });
   }
 
-  private handleWordJump(direction: 'forward' | 'backward') {
-    const currentTileX = Math.floor(this.player.x / 32);
-    const currentTileY = Math.floor(this.player.y / 32);
-
-    const jumpDistance = 5;
-    const dx = direction === 'forward' ? jumpDistance : -jumpDistance;
-    const targetX = currentTileX + dx;
-    const targetY = currentTileY;
-
-    const key = direction === 'forward' ? 'w' : 'b';
-    this.keysUsed[key]++;
-    this.lastKeyText.setText(`Last key: ${key}`);
-
-    // Check if jump is valid
-    if (!this.isValidMove(targetX, targetY)) {
-      this.mistakes++;
-      this.player.showInvalidMove();
-      this.soundManager.playErrorSound();
-      return;
-    }
-
-    // Execute jump
-    this.player.executeMoveToTile(targetX, targetY);
-    this.moveCount++;
-    this.moveText.setText(`Moves: ${this.moveCount}`);
-    this.soundManager.playMoveSound();
-
-    // Create jump trail
-    this.createJumpTrail(currentTileX * 32 + 16, currentTileY * 32 + 16, targetX * 32 + 16, targetY * 32 + 16);
-  }
-
-  private handleMoveAttempt(data: { fromX: number; fromY: number; toX: number; toY: number; key: string }) {
-    const { toX, toY, key } = data;
+  private handleMoveAttempt(data: { fromX: number; fromY: number; toX: number; toY: number; key: string; count: number; dx: number; dy: number }) {
+    const { toX, toY, key, count, dx, dy, fromX, fromY } = data;
 
     // Track key usage
     this.keysUsed[key as keyof typeof this.keysUsed]++;
-    this.lastKeyText.setText(`Last key: ${key}`);
+    if (count > 1) {
+      this.lastKeyText.setText(`Last: ${count}${key}`);
+    } else {
+      this.lastKeyText.setText(`Last key: ${key}`);
+    }
 
-    // Check if move is valid
-    if (!this.isValidMove(toX, toY)) {
+    // For multi-step moves, validate the entire path
+    let canMove = true;
+    for (let step = 1; step <= count; step++) {
+      const checkX = fromX + dx * step;
+      const checkY = fromY + dy * step;
+
+      // Check if this step is valid
+      if (!this.isValidMove(checkX, checkY)) {
+        canMove = false;
+        break;
+      }
+    }
+
+    if (!canMove) {
       this.mistakes++;
       this.player.showInvalidMove();
       this.soundManager.playErrorSound();
@@ -324,7 +319,11 @@ export class Level2Scene extends Phaser.Scene {
     this.soundManager.playMoveSound();
 
     // Create movement particle trail
-    this.createMovementTrail(data.fromX * 32 + 16, data.fromY * 32 + 16);
+    if (count > 1) {
+      this.createJumpTrail(fromX * 32 + 16, fromY * 32 + 16, toX * 32 + 16, toY * 32 + 16);
+    } else {
+      this.createMovementTrail(fromX * 32 + 16, fromY * 32 + 16);
+    }
   }
 
   private handleMoveComplete(data: { tileX: number; tileY: number }) {
