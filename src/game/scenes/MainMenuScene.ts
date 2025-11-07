@@ -1,13 +1,21 @@
 import Phaser from 'phaser';
+import { SoundManager } from '../utils/SoundManager';
 
 export class MainMenuScene extends Phaser.Scene {
   private startText!: Phaser.GameObjects.Text;
+  private soundManager!: SoundManager;
 
   constructor() {
     super({ key: 'MainMenuScene' });
   }
 
   create() {
+    // Get global sound manager and start music
+    this.soundManager = this.registry.get('soundManager') as SoundManager;
+    if (this.soundManager) {
+      this.soundManager.startBackgroundMusic();
+    }
+
     const centerX = this.cameras.main.width / 2;
     const centerY = this.cameras.main.height / 2;
 

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { SoundManager } from '../utils/SoundManager';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -12,6 +13,10 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
+    // Create global sound manager
+    const soundManager = new SoundManager();
+    this.registry.set('soundManager', soundManager);
+
     // Go straight to main menu
     this.scene.start('MainMenuScene');
   }

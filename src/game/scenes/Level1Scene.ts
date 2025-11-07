@@ -66,8 +66,8 @@ export class Level1Scene extends Phaser.Scene {
     this.currentPhase = 0;
     this.collectibles = [];
 
-    // Initialize sound manager
-    this.soundManager = new SoundManager();
+    // Get global sound manager
+    this.soundManager = this.registry.get('soundManager') as SoundManager;
 
     // Create the level map
     this.createLevel();
