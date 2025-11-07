@@ -255,10 +255,20 @@ export class Level5Scene extends Phaser.Scene {
       }
     });
 
-    // Number keys (1-9)
+    // Number keys (1-9) - use player's count prefix
     for (let i = 1; i <= 9; i++) {
-      this.input.keyboard?.on(`keydown-${i}`, () => this.handleNumberKey(i.toString()));
+      this.input.keyboard?.on(`keydown-${i}`, () => {
+        this.player.addToCountPrefix(i);
+        this.handleNumberKey(i.toString());
+      });
     }
+
+    // Listen for count prefix changes
+    this.events.on('player:countPrefixChanged', (count: number) => {
+      if (count > 0) {
+        this.lastKeyText.setText(`Count: ${count}_`);
+      }
+    });
 
     // Basic movement keys
     this.input.keyboard?.on('keydown-H', () => this.handleMovement('h', () => this.player.moveLeft()));

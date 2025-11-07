@@ -253,16 +253,28 @@ export class Level4Scene extends Phaser.Scene {
   private setupInput() {
     // Prevent default browser behavior
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
-      if (['h', 'j', 'k', 'l', 'w', 'b', 'u', 'd', '0', '$', 'r', 'R', ' ', 'Escape'].includes(event.key)) {
+      if (['h', 'j', 'k', 'l', 'w', 'b', 'u', 'd', '0', '$', 'r', 'R', ' ', 'Escape', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(event.key)) {
         event.preventDefault();
       }
     });
+
+    // Number keys for count prefix (except 0)
+    for (let i = 1; i <= 9; i++) {
+      this.input.keyboard?.on(`keydown-${i}`, () => this.player.addToCountPrefix(i));
+    }
 
     // Basic movement keys
     this.input.keyboard?.on('keydown-H', () => this.player.moveLeft());
     this.input.keyboard?.on('keydown-J', () => this.player.moveDown());
     this.input.keyboard?.on('keydown-K', () => this.player.moveUp());
     this.input.keyboard?.on('keydown-L', () => this.player.moveRight());
+
+    // Listen for count prefix changes
+    this.events.on('player:countPrefixChanged', (count: number) => {
+      if (count > 0) {
+        this.lastKeyText.setText(`Count: ${count}_`);
+      }
+    });
 
     // Word jump keys
     this.input.keyboard?.on('keydown-W', () => this.handleWordJump('forward'));

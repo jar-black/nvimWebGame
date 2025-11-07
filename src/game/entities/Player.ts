@@ -4,6 +4,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private isMoving: boolean = false;
   private currentTileX: number = 0;
   private currentTileY: number = 0;
+  private countPrefix: number = 0;
+  private countResetTimer?: Phaser.Time.TimerEvent;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'player');
@@ -19,33 +21,73 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.currentTileY = Math.floor(y / 32);
   }
 
-  moveLeft() {
+  addToCountPrefix(digit: number) {
+    // Add digit to count prefix (max 2 digits)
+    if (this.countPrefix < 10) {
+      this.countPrefix = this.countPrefix * 10 + digit;
+    }
+
+    // Reset count prefix after 2 seconds of no input
+    if (this.countResetTimer) {
+      this.countResetTimer.destroy();
+    }
+    this.countResetTimer = this.scene.time.delayedCall(2000, () => {
+      this.countPrefix = 0;
+      this.scene.events.emit('player:countPrefixChanged', 0);
+    });
+
+    // Emit event for UI update
+    this.scene.events.emit('player:countPrefixChanged', this.countPrefix);
+  }
+
+  getCountPrefix(): number {
+    return this.countPrefix;
+  }
+
+  moveLeft(count?: number) {
     if (!this.isMoving) {
-      this.attemptMove(-1, 0, 'h');
+      const moveCount = count || this.countPrefix || 1;
+      this.resetCountPrefix();
+      this.attemptMove(-1, 0, 'h', moveCount);
     }
   }
 
-  moveRight() {
+  moveRight(count?: number) {
     if (!this.isMoving) {
-      this.attemptMove(1, 0, 'l');
+      const moveCount = count || this.countPrefix || 1;
+      this.resetCountPrefix();
+      this.attemptMove(1, 0, 'l', moveCount);
     }
   }
 
-  moveUp() {
+  moveUp(count?: number) {
     if (!this.isMoving) {
-      this.attemptMove(0, -1, 'k');
+      const moveCount = count || this.countPrefix || 1;
+      this.resetCountPrefix();
+      this.attemptMove(0, -1, 'k', moveCount);
     }
   }
 
-  moveDown() {
+  moveDown(count?: number) {
     if (!this.isMoving) {
-      this.attemptMove(0, 1, 'j');
+      const moveCount = count || this.countPrefix || 1;
+      this.resetCountPrefix();
+      this.attemptMove(0, 1, 'j', moveCount);
     }
   }
 
-  private attemptMove(dx: number, dy: number, key: string) {
-    const targetTileX = this.currentTileX + dx;
-    const targetTileY = this.currentTileY + dy;
+  private resetCountPrefix() {
+    this.countPrefix = 0;
+    if (this.countResetTimer) {
+      this.countResetTimer.destroy();
+      this.countResetTimer = undefined;
+    }
+    this.scene.events.emit('player:countPrefixChanged', 0);
+  }
+
+  private attemptMove(dx: number, dy: number, key: string, count: number = 1) {
+    const targetTileX = this.currentTileX + dx * count;
+    const targetTileY = this.currentTileY + dy * count;
 
     // Emit event for movement attempt
     this.scene.events.emit('player:moveAttempt', {
@@ -53,7 +95,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       fromY: this.currentTileY,
       toX: targetTileX,
       toY: targetTileY,
-      key: key
+      key: key,
+      count: count,
+      dx: dx,
+      dy: dy
     });
   }
 

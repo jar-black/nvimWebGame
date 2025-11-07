@@ -55,8 +55,8 @@ export class Level2Scene extends Phaser.Scene {
     this.currentPhase = 0;
     this.collectibles = [];
 
-    // Initialize sound manager
-    this.soundManager = new SoundManager();
+    // Get global sound manager
+    this.soundManager = this.registry.get('soundManager') as SoundManager;
 
     // Create the level map
     this.createLevel();
@@ -76,11 +76,10 @@ export class Level2Scene extends Phaser.Scene {
 
     // Show initial tutorial
     this.showTutorial(
-      'Level 2: Word Jumps!\n\nNew Keys:\nw → Jump forward 5 tiles\nb ← Jump backward 5 tiles\n\nUse w/b for long distances, hjkl for precision!'
+      'Level 2: Jump Training!\n\nRocks and water block your path!\nUse count prefix to JUMP OVER them:\n\n2j = jump 2 tiles down (over 1 rock)\n2l = jump 2 tiles right (over 1 rock)\n3l = jump 3 tiles (over 2 water)\n\nMaster these moves to reach the goal!'
     );
 
-    // Create first waypoint
-    this.createWaypoint(15, 2);
+    // No waypoint - let player figure out the path
 
     // Set up camera
     this.cameras.main.setBounds(0, 0, this.tilemap[0].length * 32, this.tilemap.length * 32);
@@ -97,42 +96,45 @@ export class Level2Scene extends Phaser.Scene {
   }
 
   private createLevel() {
-    // Level 2: Wide open spaces with gaps requiring jumps
+    // Level 2: Count Prefix Training - obstacles require 2j, 2l, 3j, etc. to overcome
+    // Key: Rocks are placed to force count prefix usage - must jump OVER them
     this.tilemap = [
-      // Row 0-2: Start area
+      // Row 0-2: Start area and tutorial
       [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-      [3, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 0, 3, 0, 0, 3, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 3],
+      [3, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
 
-      // Row 3-6: Long horizontal corridors with gaps (requires w/b)
-      [3, 0, 0, 0, 0, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 3],
-      [3, 0, 3, 0, 3, 0, 0, 0, 0, 0, 1, 0, 3, 0, 3, 1, 0, 0, 0, 0, 0, 1, 0, 3, 0, 3, 1, 0, 0, 0, 0, 0, 1, 0, 3, 0, 3, 0, 0, 3],
-      [3, 0, 0, 0, 0, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 3],
-      [3, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 3],
+      // Row 3-5: Teaching 2j (jump down over 1 rock)
+      [3, 1, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 3],
+      [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 1, 4, 3, 4, 3, 4, 3, 4, 0, 3, 4, 3, 4, 3, 4, 0, 3, 4, 3, 4, 3, 4, 0, 3, 4, 3, 4, 3, 4, 0, 3, 4, 3, 4, 3, 4, 0, 0, 3],
 
-      // Row 7-10: Islands requiring precise jumps
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 3],
-      [3, 0, 4, 0, 4, 0, 4, 0, 4, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 4, 0, 4, 0, 0, 0, 0, 0, 4, 0, 4, 0, 0, 3],
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 3],
-      [3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 3],
+      // Row 6-8: Must use 2j to jump over rock row
+      [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
 
-      // Row 11-14: Zigzag pattern requiring w/b combinations
-      [3, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 3],
-      [3, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 4, 0, 4, 0, 4, 0, 4, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 4, 0, 4, 0, 0, 3],
-      [3, 0, 4, 0, 4, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 3],
-      [3, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 3, 0, 3, 0, 3, 0, 3, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 3, 0, 3, 5, 0, 3],
+      // Row 9-11: Teaching 2l (jump right over 1 rock)
+      [3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 1, 3],
+      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
+      [3, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 1, 3],
 
-      // Row 15-17: Long jumps required
-      [3, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 3],
-      [3, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 4, 0, 4, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 4, 0, 4, 0, 3],
-      [3, 0, 4, 0, 4, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 3],
+      // Row 12-14: Vertical shaft requires 3k to jump up
+      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
+      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 3],
+      [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
 
-      // Row 18-19: Final stretch
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 3],
-      [3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 3],
+      // Row 15-17: Must use 3l to jump over water gaps
+      [3, 1, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 3, 0, 0, 1, 3],
+      [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3],
+      [3, 1, 0, 2, 2, 0, 2, 2, 0, 0, 2, 2, 0, 2, 2, 0, 0, 2, 2, 0, 2, 2, 0, 0, 2, 2, 0, 2, 2, 0, 0, 2, 2, 0, 2, 2, 0, 0, 1, 3],
+
+      // Row 18-19: Mixed challenge - requires 2j, 2l, 3j combinations
+      [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 3],
+      [3, 1, 4, 0, 4, 0, 0, 4, 0, 4, 0, 0, 4, 0, 4, 0, 0, 4, 0, 4, 0, 0, 4, 0, 4, 0, 0, 4, 0, 4, 0, 0, 4, 0, 4, 0, 0, 0, 0, 3],
 
       // Row 20-21: Goal area
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 3],
+      [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 3],
       [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
     ];
 
@@ -160,11 +162,11 @@ export class Level2Scene extends Phaser.Scene {
       }
     }
 
-    // Place keys
-    this.createCollectible(18, 8, 'key', 1);
-    this.createCollectible(6, 15, 'key', 2);
+    // Place keys at strategic locations that prove player mastered count prefix
+    this.createCollectible(20, 8, 'key', 1);  // After mastering 2j
+    this.createCollectible(20, 16, 'key', 2); // After mastering 3l over water
 
-    // Place goal
+    // Place goal at the end
     this.createCollectible(37, 20, 'goal', 0);
   }
 
@@ -238,10 +240,15 @@ export class Level2Scene extends Phaser.Scene {
   private setupInput() {
     // Prevent default browser behavior
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
-      if (['h', 'j', 'k', 'l', 'w', 'b', 'r', 'R', ' ', 'Escape'].includes(event.key)) {
+      if (['h', 'j', 'k', 'l', 'r', 'R', ' ', 'Escape', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(event.key)) {
         event.preventDefault();
       }
     });
+
+    // Number keys for count prefix
+    for (let i = 1; i <= 9; i++) {
+      this.input.keyboard?.on(`keydown-${i}`, () => this.player.addToCountPrefix(i));
+    }
 
     // Basic movement keys
     this.input.keyboard?.on('keydown-H', () => this.player.moveLeft());
@@ -249,9 +256,14 @@ export class Level2Scene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-K', () => this.player.moveUp());
     this.input.keyboard?.on('keydown-L', () => this.player.moveRight());
 
-    // Word jump keys
-    this.input.keyboard?.on('keydown-W', () => this.handleWordJump('forward'));
-    this.input.keyboard?.on('keydown-B', () => this.handleWordJump('backward'));
+    // Listen for count prefix changes to update HUD
+    this.events.on('player:countPrefixChanged', (count: number) => {
+      if (count > 0) {
+        this.lastKeyText.setText(`Count: ${count}_`);
+      } else {
+        this.lastKeyText.setText('Last key: -');
+      }
+    });
 
     // Restart
     this.input.keyboard?.on('keydown-R', () => {
@@ -271,46 +283,31 @@ export class Level2Scene extends Phaser.Scene {
     });
   }
 
-  private handleWordJump(direction: 'forward' | 'backward') {
-    const currentTileX = Math.floor(this.player.x / 32);
-    const currentTileY = Math.floor(this.player.y / 32);
-
-    const jumpDistance = 5;
-    const dx = direction === 'forward' ? jumpDistance : -jumpDistance;
-    const targetX = currentTileX + dx;
-    const targetY = currentTileY;
-
-    const key = direction === 'forward' ? 'w' : 'b';
-    this.keysUsed[key]++;
-    this.lastKeyText.setText(`Last key: ${key}`);
-
-    // Check if jump is valid
-    if (!this.isValidMove(targetX, targetY)) {
-      this.mistakes++;
-      this.player.showInvalidMove();
-      this.soundManager.playErrorSound();
-      return;
-    }
-
-    // Execute jump
-    this.player.executeMoveToTile(targetX, targetY);
-    this.moveCount++;
-    this.moveText.setText(`Moves: ${this.moveCount}`);
-    this.soundManager.playMoveSound();
-
-    // Create jump trail
-    this.createJumpTrail(currentTileX * 32 + 16, currentTileY * 32 + 16, targetX * 32 + 16, targetY * 32 + 16);
-  }
-
-  private handleMoveAttempt(data: { fromX: number; fromY: number; toX: number; toY: number; key: string }) {
-    const { toX, toY, key } = data;
+  private handleMoveAttempt(data: { fromX: number; fromY: number; toX: number; toY: number; key: string; count: number; dx: number; dy: number }) {
+    const { toX, toY, key, count, dx, dy, fromX, fromY } = data;
 
     // Track key usage
     this.keysUsed[key as keyof typeof this.keysUsed]++;
-    this.lastKeyText.setText(`Last key: ${key}`);
+    if (count > 1) {
+      this.lastKeyText.setText(`Last: ${count}${key}`);
+    } else {
+      this.lastKeyText.setText(`Last key: ${key}`);
+    }
 
-    // Check if move is valid
-    if (!this.isValidMove(toX, toY)) {
+    // For multi-step moves, validate the entire path
+    let canMove = true;
+    for (let step = 1; step <= count; step++) {
+      const checkX = fromX + dx * step;
+      const checkY = fromY + dy * step;
+
+      // Check if this step is valid
+      if (!this.isValidMove(checkX, checkY)) {
+        canMove = false;
+        break;
+      }
+    }
+
+    if (!canMove) {
       this.mistakes++;
       this.player.showInvalidMove();
       this.soundManager.playErrorSound();
@@ -324,7 +321,11 @@ export class Level2Scene extends Phaser.Scene {
     this.soundManager.playMoveSound();
 
     // Create movement particle trail
-    this.createMovementTrail(data.fromX * 32 + 16, data.fromY * 32 + 16);
+    if (count > 1) {
+      this.createJumpTrail(fromX * 32 + 16, fromY * 32 + 16, toX * 32 + 16, toY * 32 + 16);
+    } else {
+      this.createMovementTrail(fromX * 32 + 16, fromY * 32 + 16);
+    }
   }
 
   private handleMoveComplete(data: { tileX: number; tileY: number }) {
@@ -346,7 +347,7 @@ export class Level2Scene extends Phaser.Scene {
     }
   }
 
-  private isValidMove(tileX: number, tileY: number): boolean {
+  private isValidMove(tileX: number, tileY: number, _fromX?: number, _fromY?: number, _dx?: number, _dy?: number): boolean {
     // Check bounds
     if (tileY < 0 || tileY >= this.tilemap.length || tileX < 0 || tileX >= this.tilemap[0].length) {
       return false;
@@ -354,7 +355,7 @@ export class Level2Scene extends Phaser.Scene {
 
     const tileType = this.tilemap[tileY][tileX];
 
-    // Check blocking tiles
+    // Check blocking tiles - rocks and trees block, water blocks
     if (tileType === this.TILE_TREE || tileType === this.TILE_ROCK || tileType === this.TILE_WATER) {
       return false;
     }

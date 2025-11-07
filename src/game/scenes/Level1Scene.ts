@@ -41,6 +41,17 @@ export class Level1Scene extends Phaser.Scene {
   private readonly TILE_TREE = 3;
   private readonly TILE_ROCK = 4;
   private readonly TILE_GATE = 5;
+  private readonly TILE_BRIDGE = 6;
+  private readonly TILE_ONEWAY_RIGHT = 7;
+  private readonly TILE_ONEWAY_LEFT = 8;
+  private readonly TILE_ONEWAY_UP = 9;
+  private readonly TILE_ONEWAY_DOWN = 10;
+  private readonly TILE_DOOR_RED = 11;
+  private readonly TILE_DOOR_BLUE = 12;
+  private readonly TILE_DOOR_GREEN = 13;
+
+  // Track which doors are unlocked
+  private doorsUnlocked = { red: false, blue: false, green: false };
 
   constructor() {
     super({ key: 'Level1Scene' });
@@ -55,8 +66,8 @@ export class Level1Scene extends Phaser.Scene {
     this.currentPhase = 0;
     this.collectibles = [];
 
-    // Initialize sound manager
-    this.soundManager = new SoundManager();
+    // Get global sound manager
+    this.soundManager = this.registry.get('soundManager') as SoundManager;
 
     // Create the level map
     this.createLevel();
@@ -76,11 +87,11 @@ export class Level1Scene extends Phaser.Scene {
 
     // Show initial tutorial
     this.showTutorial(
-      'Welcome to Vim Quest!\n\nUse these keys to move:\nh ← | j ↓ | k ↑ | l →\n\nNavigate to the glowing marker!'
+      'Welcome to Vim Quest!\n\nMovement: h ← | j ↓ | k ↑ | l →\n\nNEW: Use count prefix! Try 2j or 3l\nExample: Type "3" then "l" to move 3 tiles right\n\nFind the Red Key to unlock the Red Door!'
     );
 
-    // Create first waypoint
-    this.createWaypoint(7, 5);
+    // Don't create waypoint - let player explore
+    // this.createWaypoint(7, 5);
 
     // Set up camera
     this.cameras.main.setBounds(0, 0, this.tilemap[0].length * 32, this.tilemap.length * 32);
@@ -97,43 +108,39 @@ export class Level1Scene extends Phaser.Scene {
   }
 
   private createLevel() {
-    // Create a 40x22 tile map for Level 1 - HARDER VERSION with more obstacles
-    // Layout follows the design document with all phases
+    // Level 1: Complex maze with progressive key unlocking
+    // Legend: 0=grass, 1=path, 2=water, 3=tree, 4=rock, 6=bridge, 7-10=oneway, 11-13=doors
     this.tilemap = [
-      // Row 0-2: Top border and start area
+      // Row 0: Top border
       [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-      [3, 0, 0, 0, 3, 0, 3, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 3, 0, 0, 3],
-      [3, 0, 1, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 3, 0, 0, 3],
 
-      // Row 3-5: Tutorial area and path to tree maze
-      [3, 0, 1, 1, 1, 1, 1, 1, 0, 3, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 3],
-      [3, 0, 0, 0, 0, 0, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4, 3],
-      [3, 3, 0, 3, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 0, 0, 0, 0, 3, 3, 3],
+      // Row 1-7: Starting area and maze to Red Key
+      [3, 1, 1, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 3, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+      [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 1, 1, 3, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 3],
+      [3, 1, 0, 3, 3, 3, 0, 3, 3, 3, 3, 0, 3, 3, 3, 0, 3, 3, 3, 0, 3, 0, 3, 0, 1, 0, 3, 3, 0, 3, 3, 0, 3, 1, 0, 0, 0, 3, 0, 3],
+      [3, 1, 0, 3, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 3, 0, 3, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 3, 0, 3, 0, 3],
+      [3, 1, 0, 3, 0, 3, 3, 3, 3, 0, 3, 3, 3, 0, 3, 3, 3, 0, 7, 0, 3, 0, 3, 3, 1, 3, 3, 3, 3, 0, 3, 3, 3, 1, 0, 3, 0, 0, 0, 3],
+      [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 3, 3, 3, 0, 3],
+      [3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 11, 11, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 3, 0, 3],
 
-      // Row 6-10: Tree maze (focus on k and h) - MUCH DENSER
-      [3, 3, 3, 0, 0, 3, 0, 1, 1, 1, 0, 3, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 0, 3, 3],
-      [3, 0, 0, 0, 0, 3, 0, 0, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 3],
-      [3, 0, 3, 3, 0, 0, 0, 3, 0, 1, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3],
-      [3, 0, 0, 3, 0, 3, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 3],
-      [3, 3, 0, 0, 0, 3, 0, 0, 0, 1, 1, 1, 1, 0, 3, 0, 3, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 3],
+      // Row 8-14: Second area with water bridges and Blue Key
+      [3, 0, 0, 3, 0, 3, 0, 0, 3, 2, 2, 2, 2, 2, 2, 6, 2, 2, 2, 2, 2, 2, 0, 3, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 3],
+      [3, 0, 3, 0, 0, 0, 0, 3, 0, 2, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3],
+      [3, 0, 3, 0, 3, 3, 0, 3, 0, 2, 0, 3, 3, 3, 0, 6, 0, 3, 3, 3, 0, 2, 0, 3, 0, 3, 0, 3, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 3],
+      [3, 0, 0, 0, 0, 3, 0, 0, 0, 2, 0, 3, 0, 0, 0, 6, 0, 0, 0, 3, 0, 2, 0, 3, 0, 0, 0, 0, 3, 0, 0, 0, 3, 0, 3, 0, 0, 3, 0, 3],
+      [3, 0, 3, 3, 0, 3, 3, 3, 0, 2, 0, 3, 0, 3, 3, 6, 3, 3, 0, 3, 0, 2, 0, 3, 3, 3, 3, 0, 3, 3, 3, 0, 3, 0, 3, 3, 0, 7, 0, 3],
+      [3, 0, 0, 3, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 6, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+      [3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 12, 12, 12, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3],
 
-      // Row 11-14: Lake area (focus on l and navigating around) - MORE WATER AND OBSTACLES
-      [3, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 1, 0, 2, 2, 2, 2, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3, 0, 0, 0, 4, 0, 0, 3],
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3],
-      [3, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 1, 0, 2, 2, 2, 2, 2, 2, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 0, 0, 0, 3, 0, 0, 3],
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 3],
+      // Row 15-20: Third area with one-way bricks and Green Key
+      [3, 0, 3, 0, 0, 3, 0, 0, 7, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 9, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3],
+      [3, 0, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 3, 0, 3, 0, 3],
+      [3, 0, 3, 0, 3, 0, 3, 0, 0, 3, 0, 0, 3, 3, 0, 3, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3, 3, 0, 3, 0, 3, 0, 0, 3, 0, 3],
+      [3, 0, 3, 0, 0, 0, 3, 0, 3, 0, 0, 3, 0, 3, 0, 0, 0, 3, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 3, 0, 0, 0, 3, 0, 3, 0, 0, 3],
+      [3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 0, 3, 0, 3, 0, 0, 0, 8, 0, 0, 3],
+      [3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 13, 13, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 3],
 
-      // Row 15-17: Rock garden (focus on j - down movement) - MUCH MORE ROCKS
-      [3, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 1, 0, 4, 0, 4, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 3, 0, 3],
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3],
-      [3, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 1, 0, 4, 0, 4, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 5, 0, 0, 0, 3],
-
-      // Row 18-19: Final approach to goal - MORE OBSTACLES
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 4, 0, 0, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 3],
-      [3, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 3],
-
-      // Row 20-21: Bottom area with goal - MORE OBSTACLES
-      [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 0, 4, 0, 0, 3, 0, 1, 0, 3, 0, 3],
+      // Row 21: Bottom border with goal
       [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
     ];
 
@@ -161,14 +168,17 @@ export class Level1Scene extends Phaser.Scene {
       }
     }
 
-    // Place key 1 at end of tree maze (tile 13, 10)
-    this.createCollectible(13, 10, 'key', 1);
+    // Place Red Key at end of first maze (tile 18, 5)
+    this.createCollectible(18, 5, 'key', 1);
 
-    // Place key 2 in rock garden (tile 20, 15)
-    this.createCollectible(20, 15, 'key', 2);
+    // Place Blue Key in water area (tile 15, 13)
+    this.createCollectible(15, 13, 'key', 2);
 
-    // Place goal at end (tile 35, 20)
-    this.createCollectible(35, 20, 'goal', 0);
+    // Place Green Key in one-way maze (tile 36, 19)
+    this.createCollectible(36, 19, 'key', 3);
+
+    // Place goal at end (tile 38, 20)
+    this.createCollectible(38, 20, 'goal', 0);
   }
 
   private getTileTexture(tileType: number): string {
@@ -185,6 +195,22 @@ export class Level1Scene extends Phaser.Scene {
         return 'rock';
       case this.TILE_GATE:
         return 'gate';
+      case this.TILE_BRIDGE:
+        return 'bridge';
+      case this.TILE_ONEWAY_RIGHT:
+        return 'oneway_right';
+      case this.TILE_ONEWAY_LEFT:
+        return 'oneway_left';
+      case this.TILE_ONEWAY_UP:
+        return 'oneway_up';
+      case this.TILE_ONEWAY_DOWN:
+        return 'oneway_down';
+      case this.TILE_DOOR_RED:
+        return 'door_red';
+      case this.TILE_DOOR_BLUE:
+        return 'door_blue';
+      case this.TILE_DOOR_GREEN:
+        return 'door_green';
       default:
         return 'grass';
     }
@@ -241,16 +267,30 @@ export class Level1Scene extends Phaser.Scene {
   private setupInput() {
     // Prevent default browser behavior for vim keys
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
-      if (['h', 'j', 'k', 'l', 'r', 'R', ' ', 'Escape'].includes(event.key)) {
+      if (['h', 'j', 'k', 'l', 'r', 'R', ' ', 'Escape', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(event.key)) {
         event.preventDefault();
       }
     });
+
+    // Number keys for count prefix
+    for (let i = 1; i <= 9; i++) {
+      this.input.keyboard?.on(`keydown-${i}`, () => this.player.addToCountPrefix(i));
+    }
 
     // Movement keys
     this.input.keyboard?.on('keydown-H', () => this.player.moveLeft());
     this.input.keyboard?.on('keydown-J', () => this.player.moveDown());
     this.input.keyboard?.on('keydown-K', () => this.player.moveUp());
     this.input.keyboard?.on('keydown-L', () => this.player.moveRight());
+
+    // Listen for count prefix changes to update HUD
+    this.events.on('player:countPrefixChanged', (count: number) => {
+      if (count > 0) {
+        this.lastKeyText.setText(`Count: ${count}_`);
+      } else {
+        this.lastKeyText.setText('Last key: -');
+      }
+    });
 
     // Restart
     this.input.keyboard?.on('keydown-R', () => {
@@ -270,15 +310,31 @@ export class Level1Scene extends Phaser.Scene {
     });
   }
 
-  private handleMoveAttempt(data: { fromX: number; fromY: number; toX: number; toY: number; key: string }) {
-    const { toX, toY, key } = data;
+  private handleMoveAttempt(data: { fromX: number; fromY: number; toX: number; toY: number; key: string; count: number; dx: number; dy: number }) {
+    const { toX, toY, key, count, dx, dy, fromX, fromY } = data;
 
     // Track key usage
     this.keysUsed[key as keyof typeof this.keysUsed]++;
-    this.lastKeyText.setText(`Last key: ${key}`);
+    if (count > 1) {
+      this.lastKeyText.setText(`Last: ${count}${key}`);
+    } else {
+      this.lastKeyText.setText(`Last key: ${key}`);
+    }
 
-    // Check if move is valid
-    if (!this.isValidMove(toX, toY)) {
+    // For multi-step moves, validate the entire path
+    let canMove = true;
+    for (let step = 1; step <= count; step++) {
+      const checkX = fromX + dx * step;
+      const checkY = fromY + dy * step;
+
+      // Check if this step is valid
+      if (!this.isValidMove(checkX, checkY, fromX + dx * (step - 1), fromY + dy * (step - 1), dx, dy)) {
+        canMove = false;
+        break;
+      }
+    }
+
+    if (!canMove) {
       this.mistakes++;
       this.player.showInvalidMove();
       this.soundManager.playErrorSound();
@@ -292,7 +348,36 @@ export class Level1Scene extends Phaser.Scene {
     this.soundManager.playMoveSound();
 
     // Create movement particle trail
-    this.createMovementTrail(data.fromX * 32 + 16, data.fromY * 32 + 16);
+    if (count > 1) {
+      this.createJumpTrail(fromX * 32 + 16, fromY * 32 + 16, toX * 32 + 16, toY * 32 + 16);
+    } else {
+      this.createMovementTrail(fromX * 32 + 16, fromY * 32 + 16);
+    }
+  }
+
+  private createJumpTrail(x1: number, y1: number, x2: number, y2: number) {
+    // Create multiple particles along the jump path
+    const steps = 8;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = x1 + (x2 - x1) * t;
+      const y = y1 + (y2 - y1) * t;
+
+      this.time.delayedCall(i * 20, () => {
+        const particle = this.add.circle(x, y, 6, 0x4ec9b0, 0.7);
+        particle.setDepth(9);
+
+        this.tweens.add({
+          targets: particle,
+          alpha: 0,
+          scale: 2,
+          duration: 400,
+          onComplete: () => {
+            particle.destroy();
+          }
+        });
+      });
+    }
   }
 
   private handleMoveComplete(data: { tileX: number; tileY: number }) {
@@ -314,21 +399,62 @@ export class Level1Scene extends Phaser.Scene {
     }
   }
 
-  private isValidMove(tileX: number, tileY: number): boolean {
+  private isValidMove(tileX: number, tileY: number, fromX: number, fromY: number, dx: number, dy: number): boolean {
     // Check bounds
     if (tileY < 0 || tileY >= this.tilemap.length || tileX < 0 || tileX >= this.tilemap[0].length) {
       return false;
     }
 
     const tileType = this.tilemap[tileY][tileX];
+    const fromTileType = this.tilemap[fromY]?.[fromX];
 
-    // Check blocking tiles
-    if (tileType === this.TILE_TREE || tileType === this.TILE_ROCK) {
+    // Check blocking tiles (trees and rocks block movement, water blocks without bridge)
+    if (tileType === this.TILE_TREE || tileType === this.TILE_ROCK || tileType === this.TILE_WATER) {
+      return false;
+    }
+
+    // Check doors
+    if (tileType === this.TILE_DOOR_RED && !this.doorsUnlocked.red) {
+      return false;
+    }
+    if (tileType === this.TILE_DOOR_BLUE && !this.doorsUnlocked.blue) {
+      return false;
+    }
+    if (tileType === this.TILE_DOOR_GREEN && !this.doorsUnlocked.green) {
       return false;
     }
 
     // Check gate (needs keys)
-    if (tileType === this.TILE_GATE && this.keysCollected < 2) {
+    if (tileType === this.TILE_GATE && this.keysCollected < 3) {
+      return false;
+    }
+
+    // Check one-way bricks
+    // Can only pass through one-way bricks in the direction of the arrow
+    if (tileType === this.TILE_ONEWAY_RIGHT && dx !== 1) {
+      return false;
+    }
+    if (tileType === this.TILE_ONEWAY_LEFT && dx !== -1) {
+      return false;
+    }
+    if (tileType === this.TILE_ONEWAY_UP && dy !== -1) {
+      return false;
+    }
+    if (tileType === this.TILE_ONEWAY_DOWN && dy !== 1) {
+      return false;
+    }
+
+    // If leaving a one-way brick, check we're going in the right direction
+    if (fromTileType === this.TILE_ONEWAY_RIGHT && dx === -1) {
+      return false;
+    }
+    if (fromTileType === this.TILE_ONEWAY_LEFT && dx === 1) {
+      return false;
+    }
+    if (fromTileType === this.TILE_ONEWAY_UP && dy === 1) {
+      return false;
+    }
+    if (fromTileType === this.TILE_ONEWAY_DOWN && dy === -1) {
       return false;
     }
 
@@ -354,7 +480,7 @@ export class Level1Scene extends Phaser.Scene {
 
   private collectKey(collectible: Collectible) {
     this.keysCollected++;
-    this.keysText.setText(`Keys: ${this.keysCollected}/2`);
+    this.keysText.setText(`Keys: ${this.keysCollected}/3`);
     this.soundManager.playCollectSound();
 
     // Particle effect
@@ -363,13 +489,41 @@ export class Level1Scene extends Phaser.Scene {
     // Remove sprite
     collectible.sprite.destroy();
 
-    // Update tutorial
-    if (this.keysCollected === 1) {
-      this.showTutorial('Great! You found Key 1!\n\nNow navigate through the rock garden\nusing j (down) to find Key 2.');
-    } else if (this.keysCollected === 2) {
-      this.showTutorial('Excellent! You have both keys!\n\nNow you can pass through the gate.\nHead to the golden star to complete the level!');
-      // Open gate
+    // Update tutorial and unlock doors based on which key was collected
+    if (collectible.id === 1) {
+      this.showTutorial('Red Key collected!\n\nThe red door is now unlocked.\nFind the blue key!');
+      this.doorsUnlocked.red = true;
+      this.openDoor(this.TILE_DOOR_RED);
+    } else if (collectible.id === 2) {
+      this.showTutorial('Blue Key collected!\n\nThe blue door is now unlocked.\nFind the green key!');
+      this.doorsUnlocked.blue = true;
+      this.openDoor(this.TILE_DOOR_BLUE);
+    } else if (collectible.id === 3) {
+      this.showTutorial('Green Key collected!\n\nThe green door is now unlocked.\nHead to the goal!');
+      this.doorsUnlocked.green = true;
+      this.openDoor(this.TILE_DOOR_GREEN);
       this.openGate();
+    }
+  }
+
+  private openDoor(doorType: number) {
+    // Find and convert door tiles to path
+    for (let y = 0; y < this.tilemap.length; y++) {
+      for (let x = 0; x < this.tilemap[y].length; x++) {
+        if (this.tilemap[y][x] === doorType) {
+          this.tilemap[y][x] = this.TILE_PATH;
+          this.tileSprites[y][x].setTexture('path');
+
+          // Flash effect
+          this.tweens.add({
+            targets: this.tileSprites[y][x],
+            alpha: 0.3,
+            duration: 100,
+            yoyo: true,
+            repeat: 3
+          });
+        }
+      }
     }
   }
 
@@ -451,7 +605,7 @@ export class Level1Scene extends Phaser.Scene {
     }).setScrollFactor(0).setDepth(100);
 
     // Keys collected
-    this.keysText = this.add.text(430, hudY, 'Keys: 0/2', {
+    this.keysText = this.add.text(430, hudY, 'Keys: 0/3', {
       fontFamily: 'Courier New, monospace',
       fontSize: '18px',
       color: '#ffd600',
