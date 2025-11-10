@@ -73,6 +73,28 @@ pnpm run build
 pnpm run preview
 ```
 
+### Docker Installation (Alternative)
+
+If you prefer using Docker, you can run the application in a container:
+
+```bash
+# Build and start the container
+docker-compose up
+
+# Or run in detached mode
+docker-compose up -d
+
+# Stop the container
+docker-compose down
+```
+
+The application will be available at `http://localhost:5173`
+
+Docker advantages:
+- No need to install Node.js or pnpm locally
+- Consistent development environment
+- Hot-reload enabled for development
+
 ## 🛠️ Tech Stack
 
 - **Game Engine**: Phaser 3
