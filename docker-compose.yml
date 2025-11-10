@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: nvim-web-game
     ports:
-      - "50742:5173"
+      - "50744:5173"
     volumes:
       # Mount source code for hot-reload during development
       - ./src:/app/src
