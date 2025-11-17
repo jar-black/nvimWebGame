@@ -22,259 +22,252 @@ export class BootScene extends Phaser.Scene {
   }
 
   private createPlaceholderAssets() {
-    // Create player sprite (character with face)
+    const palette = {
+      panelDark: 0x030814,
+      panelMid: 0x0f1f35,
+      neonCyan: 0x19fff5,
+      neonPink: 0xff3cfb,
+      neonGreen: 0x6cff6f,
+      neonYellow: 0xfff56c,
+      neonOrange: 0xff8a4d,
+      neonBlue: 0x4fd1ff,
+      accent: 0x152b40
+    };
+
+    // Hacker avatar with neon visor and circuitry body
     const playerGraphics = this.add.graphics();
-    // Body (orange)
-    playerGraphics.fillStyle(0xff6f00, 1);
-    playerGraphics.fillRoundedRect(8, 10, 16, 18, 4);
-    // Head (lighter orange)
-    playerGraphics.fillStyle(0xffab40, 1);
-    playerGraphics.fillCircle(16, 10, 8);
-    // Eyes
-    playerGraphics.fillStyle(0x000000, 1);
-    playerGraphics.fillCircle(13, 9, 2);
-    playerGraphics.fillCircle(19, 9, 2);
-    // Smile
-    playerGraphics.lineStyle(2, 0x000000, 1);
-    playerGraphics.arc(16, 10, 4, 0.2, Math.PI - 0.2);
-    // Arms
-    playerGraphics.fillStyle(0xff6f00, 1);
-    playerGraphics.fillRect(4, 12, 4, 8);
-    playerGraphics.fillRect(24, 12, 4, 8);
-    // Legs
-    playerGraphics.fillRect(10, 26, 5, 6);
-    playerGraphics.fillRect(17, 26, 5, 6);
+    playerGraphics.fillStyle(palette.panelDark, 1);
+    playerGraphics.fillRoundedRect(4, 4, 24, 24, 8);
+    playerGraphics.lineStyle(2, palette.neonCyan, 1);
+    playerGraphics.strokeRoundedRect(4, 4, 24, 24, 8);
+    // Visor
+    playerGraphics.fillStyle(palette.neonPink, 1);
+    playerGraphics.fillRoundedRect(8, 10, 16, 6, 3);
+    playerGraphics.fillStyle(palette.panelDark, 1);
+    playerGraphics.fillRoundedRect(10, 12, 12, 2, 1);
+    // Circuit chest symbol
+    playerGraphics.lineStyle(2, palette.neonGreen, 1);
+    playerGraphics.beginPath();
+    playerGraphics.moveTo(10, 20);
+    playerGraphics.lineTo(16, 24);
+    playerGraphics.lineTo(22, 18);
+    playerGraphics.strokePath();
     playerGraphics.generateTexture('player', 32, 32);
     playerGraphics.destroy();
 
-    // Create grass tile (light green)
+    // Neon grass becomes "data turf" with circuit traces
     const grassGraphics = this.add.graphics();
-    grassGraphics.fillStyle(0x7cb342, 1);
+    grassGraphics.fillStyle(0x04121a, 1);
     grassGraphics.fillRect(0, 0, 32, 32);
-    grassGraphics.lineStyle(1, 0x689f38, 0.3);
-    grassGraphics.strokeRect(0, 0, 32, 32);
+    grassGraphics.lineStyle(1, palette.neonGreen, 0.3);
+    for (let i = 0; i < 4; i++) {
+      grassGraphics.strokeRect(2 + i * 6, 2 + (i % 2) * 3, 6, 24);
+    }
+    grassGraphics.lineStyle(1, palette.neonCyan, 0.5);
+    grassGraphics.strokeRect(1, 1, 30, 30);
     grassGraphics.generateTexture('grass', 32, 32);
     grassGraphics.destroy();
 
-    // Create path tile (sandy)
+    // Path tile becomes glowing circuitry lane
     const pathGraphics = this.add.graphics();
-    pathGraphics.fillStyle(0xd4c5a9, 1);
+    pathGraphics.fillStyle(palette.panelMid, 1);
     pathGraphics.fillRect(0, 0, 32, 32);
-    pathGraphics.lineStyle(1, 0xc0b090, 0.3);
-    pathGraphics.strokeRect(0, 0, 32, 32);
+    pathGraphics.lineStyle(3, palette.neonCyan, 1);
+    pathGraphics.beginPath();
+    pathGraphics.moveTo(4, 28);
+    pathGraphics.lineTo(12, 20);
+    pathGraphics.lineTo(20, 24);
+    pathGraphics.lineTo(28, 12);
+    pathGraphics.strokePath();
+    pathGraphics.lineStyle(1, palette.neonPink, 0.8);
+    pathGraphics.strokeRect(2, 2, 28, 28);
     pathGraphics.generateTexture('path', 32, 32);
     pathGraphics.destroy();
 
-    // Create water tile (blue)
+    // Water tile becomes an energy pool
     const waterGraphics = this.add.graphics();
-    waterGraphics.fillStyle(0x42a5f5, 1);
+    waterGraphics.fillStyle(0x04132c, 1);
     waterGraphics.fillRect(0, 0, 32, 32);
-    waterGraphics.fillStyle(0x1e88e5, 0.3);
-    waterGraphics.fillRect(8, 8, 16, 16);
+    waterGraphics.fillStyle(palette.neonBlue, 0.7);
+    waterGraphics.fillCircle(16, 16, 12);
+    waterGraphics.lineStyle(2, palette.neonCyan, 1);
+    waterGraphics.strokeCircle(16, 16, 12);
+    waterGraphics.lineStyle(1, palette.neonPink, 1);
+    waterGraphics.strokeCircle(16, 16, 6);
     waterGraphics.generateTexture('water', 32, 32);
     waterGraphics.destroy();
 
-    // Create tree (dark green circle on brown rectangle)
+    // Tree becomes a glowing data obelisk
     const treeGraphics = this.add.graphics();
-    treeGraphics.fillStyle(0x5d4037, 1);
-    treeGraphics.fillRect(12, 20, 8, 12);
-    treeGraphics.fillStyle(0x2e7d32, 1);
-    treeGraphics.fillCircle(16, 16, 12);
-    treeGraphics.fillStyle(0x1b5e20, 0.5);
-    treeGraphics.fillCircle(12, 12, 6);
-    treeGraphics.fillCircle(20, 12, 6);
+    treeGraphics.fillStyle(palette.panelDark, 1);
+    treeGraphics.fillRect(12, 8, 8, 20);
+    treeGraphics.lineStyle(2, palette.neonGreen, 1);
+    treeGraphics.strokeRect(12, 8, 8, 20);
+    treeGraphics.fillStyle(palette.neonGreen, 0.3);
+    treeGraphics.fillCircle(16, 8, 8);
+    treeGraphics.lineStyle(1, palette.neonGreen, 1);
+    treeGraphics.strokeCircle(16, 8, 8);
     treeGraphics.generateTexture('tree', 32, 32);
     treeGraphics.destroy();
 
-    // Create rock (gray irregular shape)
+    // Rock becomes a power capacitor node
     const rockGraphics = this.add.graphics();
-    rockGraphics.fillStyle(0x757575, 1);
-    rockGraphics.fillCircle(16, 18, 10);
-    rockGraphics.fillCircle(10, 16, 7);
-    rockGraphics.fillCircle(22, 16, 7);
-    rockGraphics.fillStyle(0x616161, 1);
-    rockGraphics.fillCircle(16, 14, 6);
+    rockGraphics.fillStyle(palette.panelMid, 1);
+    rockGraphics.beginPath();
+    rockGraphics.moveTo(4, 20);
+    rockGraphics.lineTo(10, 8);
+    rockGraphics.lineTo(22, 6);
+    rockGraphics.lineTo(28, 18);
+    rockGraphics.lineTo(20, 26);
+    rockGraphics.closePath();
+    rockGraphics.fillPath();
+    rockGraphics.lineStyle(2, palette.neonOrange, 1);
+    rockGraphics.strokePath();
+    rockGraphics.lineStyle(1, palette.neonYellow, 1);
+    rockGraphics.beginPath();
+    rockGraphics.moveTo(12, 14);
+    rockGraphics.lineTo(20, 18);
+    rockGraphics.lineTo(16, 22);
+    rockGraphics.strokePath();
     rockGraphics.generateTexture('rock', 32, 32);
     rockGraphics.destroy();
 
-    // Create key (golden)
+    // Key becomes a neon circuit keycard
     const keyGraphics = this.add.graphics();
-    keyGraphics.fillStyle(0xffd600, 1);
-    keyGraphics.fillCircle(12, 12, 6);
-    keyGraphics.fillRect(12, 12, 12, 4);
-    keyGraphics.fillRect(20, 10, 2, 2);
-    keyGraphics.fillRect(20, 14, 2, 2);
-    keyGraphics.lineStyle(2, 0xffa000, 1);
-    keyGraphics.strokeCircle(12, 12, 6);
+    keyGraphics.fillStyle(palette.panelMid, 1);
+    keyGraphics.fillRoundedRect(4, 8, 24, 16, 4);
+    keyGraphics.lineStyle(2, palette.neonYellow, 1);
+    keyGraphics.strokeRoundedRect(4, 8, 24, 16, 4);
+    keyGraphics.fillStyle(palette.neonCyan, 1);
+    keyGraphics.fillRect(18, 11, 6, 10);
+    keyGraphics.fillStyle(palette.neonPink, 1);
+    keyGraphics.fillCircle(12, 16, 3);
     keyGraphics.generateTexture('key', 32, 32);
     keyGraphics.destroy();
 
-    // Create gate (brown locked door)
+    // Gate becomes an energy firewall
     const gateGraphics = this.add.graphics();
-    gateGraphics.fillStyle(0x6d4c41, 1);
+    gateGraphics.fillStyle(palette.panelDark, 1);
     gateGraphics.fillRect(0, 0, 32, 32);
-    gateGraphics.fillStyle(0x5d4037, 1);
-    gateGraphics.fillRect(2, 2, 28, 28);
-    gateGraphics.lineStyle(2, 0x4e342e, 1);
-    gateGraphics.strokeRect(6, 6, 20, 20);
-    gateGraphics.fillStyle(0xffd600, 1);
-    gateGraphics.fillCircle(22, 16, 3);
+    gateGraphics.lineStyle(2, palette.neonPink, 1);
+    gateGraphics.strokeRect(2, 2, 28, 28);
+    gateGraphics.lineStyle(2, palette.neonCyan, 1);
+    gateGraphics.beginPath();
+    gateGraphics.moveTo(8, 8);
+    gateGraphics.lineTo(24, 24);
+    gateGraphics.moveTo(24, 8);
+    gateGraphics.lineTo(8, 24);
+    gateGraphics.strokePath();
     gateGraphics.generateTexture('gate', 32, 32);
     gateGraphics.destroy();
 
-    // Create goal (yellow star)
+    // Neon goal glyph
     const goalGraphics = this.add.graphics();
-    goalGraphics.fillStyle(0xffd600, 1);
+    goalGraphics.fillStyle(palette.neonYellow, 0.8);
     this.drawStar(goalGraphics, 16, 16, 5, 12, 6);
-    goalGraphics.lineStyle(2, 0xffa000, 1);
+    goalGraphics.lineStyle(2, palette.neonOrange, 1);
     this.drawStar(goalGraphics, 16, 16, 5, 12, 6, true);
+    goalGraphics.lineStyle(1, palette.neonPink, 1);
+    goalGraphics.strokeCircle(16, 16, 14);
     goalGraphics.generateTexture('goal', 32, 32);
     goalGraphics.destroy();
 
-    // Create waypoint (glowing marker)
+    // Glowing waypoint beacon
     const waypointGraphics = this.add.graphics();
-    waypointGraphics.fillStyle(0x00ff00, 0.3);
+    waypointGraphics.fillStyle(palette.neonCyan, 0.15);
     waypointGraphics.fillCircle(16, 16, 14);
-    waypointGraphics.fillStyle(0x00ff00, 0.6);
+    waypointGraphics.fillStyle(palette.neonCyan, 0.4);
     waypointGraphics.fillCircle(16, 16, 10);
-    waypointGraphics.fillStyle(0x00ff00, 1);
-    waypointGraphics.fillCircle(16, 16, 6);
+    waypointGraphics.fillStyle(palette.neonCyan, 0.8);
+    waypointGraphics.fillCircle(16, 16, 4);
+    waypointGraphics.lineStyle(2, palette.neonPink, 0.8);
+    waypointGraphics.strokeCircle(16, 16, 14);
     waypointGraphics.generateTexture('waypoint', 32, 32);
     waypointGraphics.destroy();
 
-    // Create bridge tile (wooden planks over water)
+    // Bridge becomes an energy conduit
     const bridgeGraphics = this.add.graphics();
-    bridgeGraphics.fillStyle(0x42a5f5, 1);
+    bridgeGraphics.fillStyle(0x031120, 1);
     bridgeGraphics.fillRect(0, 0, 32, 32);
-    bridgeGraphics.fillStyle(0x8d6e63, 1);
-    bridgeGraphics.fillRect(2, 0, 6, 32);
-    bridgeGraphics.fillRect(12, 0, 6, 32);
-    bridgeGraphics.fillRect(22, 0, 6, 32);
-    bridgeGraphics.fillStyle(0x6d4c41, 1);
-    bridgeGraphics.fillRect(0, 12, 32, 3);
-    bridgeGraphics.fillRect(0, 20, 32, 3);
+    bridgeGraphics.lineStyle(3, palette.neonCyan, 1);
+    bridgeGraphics.beginPath();
+    bridgeGraphics.moveTo(4, 0);
+    bridgeGraphics.lineTo(12, 32);
+    bridgeGraphics.moveTo(20, 0);
+    bridgeGraphics.lineTo(28, 32);
+    bridgeGraphics.strokePath();
+    bridgeGraphics.lineStyle(1, palette.neonPink, 0.8);
+    bridgeGraphics.strokeRect(0, 0, 32, 32);
     bridgeGraphics.generateTexture('bridge', 32, 32);
     bridgeGraphics.destroy();
 
-    // Create one-way brick (right arrow)
+    // Helper to draw neon arrows
+    const drawArrow = (graphics: Phaser.GameObjects.Graphics, direction: 'right' | 'left' | 'up' | 'down') => {
+      graphics.fillStyle(palette.panelDark, 1);
+      graphics.fillRect(0, 0, 32, 32);
+      graphics.lineStyle(2, palette.neonPink, 1);
+      graphics.strokeRect(2, 2, 28, 28);
+      graphics.fillStyle(palette.neonCyan, 1);
+      graphics.beginPath();
+      if (direction === 'right') {
+        graphics.moveTo(8, 10);
+        graphics.lineTo(22, 16);
+        graphics.lineTo(8, 22);
+      } else if (direction === 'left') {
+        graphics.moveTo(24, 10);
+        graphics.lineTo(10, 16);
+        graphics.lineTo(24, 22);
+      } else if (direction === 'up') {
+        graphics.moveTo(10, 22);
+        graphics.lineTo(16, 8);
+        graphics.lineTo(22, 22);
+      } else {
+        graphics.moveTo(10, 10);
+        graphics.lineTo(16, 24);
+        graphics.lineTo(22, 10);
+      }
+      graphics.closePath();
+      graphics.fillPath();
+    };
+
     const oneWayRightGraphics = this.add.graphics();
-    oneWayRightGraphics.fillStyle(0xb71c1c, 1);
-    oneWayRightGraphics.fillRect(0, 0, 32, 32);
-    oneWayRightGraphics.fillStyle(0xc62828, 1);
-    oneWayRightGraphics.fillRect(2, 2, 28, 28);
-    // Arrow pointing right
-    oneWayRightGraphics.fillStyle(0xffeb3b, 1);
-    oneWayRightGraphics.beginPath();
-    oneWayRightGraphics.moveTo(8, 16);
-    oneWayRightGraphics.lineTo(20, 16);
-    oneWayRightGraphics.lineTo(20, 10);
-    oneWayRightGraphics.lineTo(28, 16);
-    oneWayRightGraphics.lineTo(20, 22);
-    oneWayRightGraphics.lineTo(20, 16);
-    oneWayRightGraphics.closePath();
-    oneWayRightGraphics.fillPath();
+    drawArrow(oneWayRightGraphics, 'right');
     oneWayRightGraphics.generateTexture('oneway_right', 32, 32);
     oneWayRightGraphics.destroy();
 
-    // Create one-way brick (left arrow)
     const oneWayLeftGraphics = this.add.graphics();
-    oneWayLeftGraphics.fillStyle(0xb71c1c, 1);
-    oneWayLeftGraphics.fillRect(0, 0, 32, 32);
-    oneWayLeftGraphics.fillStyle(0xc62828, 1);
-    oneWayLeftGraphics.fillRect(2, 2, 28, 28);
-    // Arrow pointing left
-    oneWayLeftGraphics.fillStyle(0xffeb3b, 1);
-    oneWayLeftGraphics.beginPath();
-    oneWayLeftGraphics.moveTo(24, 16);
-    oneWayLeftGraphics.lineTo(12, 16);
-    oneWayLeftGraphics.lineTo(12, 10);
-    oneWayLeftGraphics.lineTo(4, 16);
-    oneWayLeftGraphics.lineTo(12, 22);
-    oneWayLeftGraphics.lineTo(12, 16);
-    oneWayLeftGraphics.closePath();
-    oneWayLeftGraphics.fillPath();
+    drawArrow(oneWayLeftGraphics, 'left');
     oneWayLeftGraphics.generateTexture('oneway_left', 32, 32);
     oneWayLeftGraphics.destroy();
 
-    // Create one-way brick (up arrow)
     const oneWayUpGraphics = this.add.graphics();
-    oneWayUpGraphics.fillStyle(0xb71c1c, 1);
-    oneWayUpGraphics.fillRect(0, 0, 32, 32);
-    oneWayUpGraphics.fillStyle(0xc62828, 1);
-    oneWayUpGraphics.fillRect(2, 2, 28, 28);
-    // Arrow pointing up
-    oneWayUpGraphics.fillStyle(0xffeb3b, 1);
-    oneWayUpGraphics.beginPath();
-    oneWayUpGraphics.moveTo(16, 24);
-    oneWayUpGraphics.lineTo(16, 12);
-    oneWayUpGraphics.lineTo(10, 12);
-    oneWayUpGraphics.lineTo(16, 4);
-    oneWayUpGraphics.lineTo(22, 12);
-    oneWayUpGraphics.lineTo(16, 12);
-    oneWayUpGraphics.closePath();
-    oneWayUpGraphics.fillPath();
+    drawArrow(oneWayUpGraphics, 'up');
     oneWayUpGraphics.generateTexture('oneway_up', 32, 32);
     oneWayUpGraphics.destroy();
 
-    // Create one-way brick (down arrow)
     const oneWayDownGraphics = this.add.graphics();
-    oneWayDownGraphics.fillStyle(0xb71c1c, 1);
-    oneWayDownGraphics.fillRect(0, 0, 32, 32);
-    oneWayDownGraphics.fillStyle(0xc62828, 1);
-    oneWayDownGraphics.fillRect(2, 2, 28, 28);
-    // Arrow pointing down
-    oneWayDownGraphics.fillStyle(0xffeb3b, 1);
-    oneWayDownGraphics.beginPath();
-    oneWayDownGraphics.moveTo(16, 8);
-    oneWayDownGraphics.lineTo(16, 20);
-    oneWayDownGraphics.lineTo(10, 20);
-    oneWayDownGraphics.lineTo(16, 28);
-    oneWayDownGraphics.lineTo(22, 20);
-    oneWayDownGraphics.lineTo(16, 20);
-    oneWayDownGraphics.closePath();
-    oneWayDownGraphics.fillPath();
+    drawArrow(oneWayDownGraphics, 'down');
     oneWayDownGraphics.generateTexture('oneway_down', 32, 32);
     oneWayDownGraphics.destroy();
 
-    // Create locked door sprites for progressive unlocking
-    // Red door (requires key 1)
-    const redDoorGraphics = this.add.graphics();
-    redDoorGraphics.fillStyle(0xc62828, 1);
-    redDoorGraphics.fillRect(0, 0, 32, 32);
-    redDoorGraphics.fillStyle(0xb71c1c, 1);
-    redDoorGraphics.fillRect(4, 4, 24, 24);
-    redDoorGraphics.fillStyle(0xffd600, 1);
-    redDoorGraphics.fillCircle(22, 16, 3);
-    redDoorGraphics.lineStyle(2, 0xff0000, 1);
-    redDoorGraphics.strokeRect(6, 6, 20, 20);
-    redDoorGraphics.generateTexture('door_red', 32, 32);
-    redDoorGraphics.destroy();
+    // Create locked door sprites with neon trims
+    const createDoor = (key: string, baseColor: number) => {
+      const doorGraphics = this.add.graphics();
+      doorGraphics.fillStyle(palette.panelDark, 1);
+      doorGraphics.fillRect(0, 0, 32, 32);
+      doorGraphics.fillStyle(baseColor, 0.8);
+      doorGraphics.fillRoundedRect(4, 4, 24, 24, 4);
+      doorGraphics.lineStyle(2, baseColor, 1);
+      doorGraphics.strokeRoundedRect(4, 4, 24, 24, 4);
+      doorGraphics.lineStyle(2, palette.neonYellow, 1);
+      doorGraphics.strokeCircle(22, 16, 4);
+      doorGraphics.generateTexture(key, 32, 32);
+      doorGraphics.destroy();
+    };
 
-    // Blue door (requires key 2)
-    const blueDoorGraphics = this.add.graphics();
-    blueDoorGraphics.fillStyle(0x1565c0, 1);
-    blueDoorGraphics.fillRect(0, 0, 32, 32);
-    blueDoorGraphics.fillStyle(0x0d47a1, 1);
-    blueDoorGraphics.fillRect(4, 4, 24, 24);
-    blueDoorGraphics.fillStyle(0xffd600, 1);
-    blueDoorGraphics.fillCircle(22, 16, 3);
-    blueDoorGraphics.lineStyle(2, 0x1976d2, 1);
-    blueDoorGraphics.strokeRect(6, 6, 20, 20);
-    blueDoorGraphics.generateTexture('door_blue', 32, 32);
-    blueDoorGraphics.destroy();
-
-    // Green door (requires key 3)
-    const greenDoorGraphics = this.add.graphics();
-    greenDoorGraphics.fillStyle(0x2e7d32, 1);
-    greenDoorGraphics.fillRect(0, 0, 32, 32);
-    greenDoorGraphics.fillStyle(0x1b5e20, 1);
-    greenDoorGraphics.fillRect(4, 4, 24, 24);
-    greenDoorGraphics.fillStyle(0xffd600, 1);
-    greenDoorGraphics.fillCircle(22, 16, 3);
-    greenDoorGraphics.lineStyle(2, 0x43a047, 1);
-    greenDoorGraphics.strokeRect(6, 6, 20, 20);
-    greenDoorGraphics.generateTexture('door_green', 32, 32);
-    greenDoorGraphics.destroy();
+    createDoor('door_red', 0xff3366);
+    createDoor('door_blue', 0x3366ff);
+    createDoor('door_green', 0x33ff99);
   }
 
   private drawStar(
